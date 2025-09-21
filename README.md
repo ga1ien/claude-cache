@@ -1,5 +1,9 @@
 # Claude Cache
 
+[![PyPI version](https://badge.fury.io/py/claude-cache.svg)](https://pypi.org/project/claude-cache/)
+[![Python Support](https://img.shields.io/pypi/pyversions/claude-cache)](https://pypi.org/project/claude-cache/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **Memory for your AI coding assistant**
 
 Claude Cache automatically processes your Claude Code logs, identifies successful patterns, and builds memory that reduces AI hallucinations and improves coding effectiveness.
@@ -51,9 +55,14 @@ When you switch between projects in Claude Code, Claude Cache automatically swit
 
 ## Installation
 
-### From Source
+### From PyPI (Recommended)
 ```bash
-git clone https://github.com/yourusername/claude-cache.git
+pip install claude-cache
+```
+
+### From Source (Development)
+```bash
+git clone https://github.com/ga1ien/claude-cache.git
 cd claude-cache
 pip install -e .
 ```

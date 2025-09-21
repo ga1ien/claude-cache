@@ -9,7 +9,23 @@ description = "Claude Cache - Memory for your AI coding assistant"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Ga1ien", email = "g@braintied.com"}
+]
+maintainers = [
+    {name = "Ga1ien", email = "g@braintied.com"}
+]
+keywords = ["claude", "ai", "cache", "memory", "coding-assistant", "claude-code", "cursor"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
 ]
 requires-python = ">=3.8"
 dependencies = [
@@ -28,6 +44,11 @@ dev = [
     "isort>=5.0.0",
     "mypy>=1.0.0",
 ]
+
+[project.urls]
+"Homepage" = "https://github.com/ga1ien/claude-cache"
+"Bug Tracker" = "https://github.com/ga1ien/claude-cache/issues"
+"Source" = "https://github.com/ga1ien/claude-cache"
 
 [project.scripts]
 cache = "cache_for_claude.cli:main"
