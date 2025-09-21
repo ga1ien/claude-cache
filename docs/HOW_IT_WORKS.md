@@ -30,40 +30,65 @@
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## 1️⃣ How It Learns (Background Process)
+## 1️⃣ How It Learns (Your Feedback is Key!)
 
-### Automatic Pattern Detection
-When running in background (`cache start`), it:
+### IMPORTANT: You Must Provide Feedback!
+**Claude Cache learns from success signals in your conversations.** When Claude helps you successfully, you need to tell it! This is how Cache knows what worked.
 
+### What to Say When Things Work
 ```python
-# Watches for these success signals in real-time:
-SUCCESS_SIGNALS = {
-    "explicit_wins": [
-        "✓ Tests passed",
-        "Successfully deployed",
-        "Build successful"
-    ],
-    "user_satisfaction": [
+# Say things like these to trigger learning:
+FEEDBACK_PHRASES = {
+    "strong_signals": [
         "Perfect!",
-        "That worked",
-        "Thanks"
+        "That worked!",
+        "Thanks!"
+        "Excellent!"
     ],
-    "code_quality": [
-        "No errors",
-        "All green",
-        "Fixed the issue"
+    "task_complete": [
+        "Fixed the issue",
+        "Tests pass now",
+        "No more errors",
+        "It's working"
+    ],
+    "appreciation": [
+        "Great job",
+        "Exactly what I needed",
+        "That solved it"
     ]
 }
 ```
 
+### Example: Feedback Makes the Difference
+```
+# WITHOUT FEEDBACK (Cache doesn't learn):
+You: "Fix the login bug"
+Claude: *fixes bug*
+You: [silence]
+Cache: ❓ Was this successful? Unknown. Pattern NOT saved.
+
+# WITH FEEDBACK (Cache learns!):
+You: "Fix the login bug"
+Claude: *fixes bug*
+You: "Perfect! Login works now"
+Cache: ✅ Success detected! Pattern SAVED for future use.
+```
+
+### Automatic Detection Also Helps
+Besides your feedback, Cache also watches for:
+- "✓ Tests passed", "Build successful" in output
+- No error messages after code changes
+- Successful file modifications
+- Multiple success indicators together
+
 ### Smart Filtering
 The tool ONLY saves patterns when:
-- Success score > 70%
+- Success score > 70% (needs clear positive signals)
 - No critical errors occurred
 - Task actually completed
-- Multiple success indicators present
+- Your feedback confirms success
 
-This ensures it learns from WINS, not failures!
+**Remember: No feedback = No learning!**
 
 ## 2️⃣ How Context Gets Back to Claude
 

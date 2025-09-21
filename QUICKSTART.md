@@ -150,29 +150,46 @@ This file is automatically read by Claude Code. It contains:
 
 ## 💡 Step 4: Using Claude Cache
 
-### While Coding with Claude in Cursor
+### Important: Give Feedback to Help Cache Learn!
 
-**Just code normally!** Claude Cache enhances Claude automatically:
+**Claude Cache learns from your success signals.** When Claude helps you and it works, say:
+- ✅ **"Perfect!"** or **"That worked!"**
+- ✅ **"Thanks, that fixed it!"**
+- ✅ **"Great, tests pass now!"**
+
+Without feedback, Cache won't know what worked and won't save patterns!
+
+### While Coding with Claude in Cursor
 
 1. **Start a new Claude chat in Cursor**
 2. **Claude automatically sees your patterns** (via CLAUDE.md)
-3. **Ask Claude to do something similar to before**
-4. **Claude will reference successful past approaches**
+3. **Ask Claude to do something**
+4. **When it works, tell Claude!** → This triggers learning
+5. **Claude will reference successful past approaches**
 
-### Example Conversation
+### Example Conversations
 
-**Before Claude Cache:**
+**Without Feedback (Cache doesn't learn):**
 ```
 You: "Add user authentication"
-Claude: [Might suggest wrong library or approach]
+Claude: *implements auth*
+You: [silence, move to next task]
+Cache: ❓ Didn't detect success, pattern not saved
 ```
 
-**After Claude Cache:**
+**With Feedback (Cache learns!):**
 ```
 You: "Add user authentication"
+Claude: *implements auth*
+You: "Perfect! The login works now"
+Cache: ✅ Success detected! Pattern saved for next time
+```
+
+**Next Time:**
+```
+You: "Add password reset"
 Claude: "I see you've successfully used JWT with refresh tokens
-        in this project. Let me follow the same pattern that
-        worked in auth.js..."
+        for auth. Let me follow that same pattern..."
 ```
 
 ### Using Slash Commands

@@ -74,7 +74,9 @@ cache start
 
 2. **Use Claude Code as normal** - Claude Cache will automatically process your interactions
 
-3. **Access your patterns** via slash commands in Claude Code:
+3. **Give feedback when things work** - Say "Perfect!", "That worked", or "Thanks!" to help Claude Cache learn
+
+4. **Access your patterns** via slash commands in Claude Code:
 - `/project-context [task description]` - Get relevant patterns for your current task
 - `/best-practices` - View successful approaches
 - `/conventions` - See detected project conventions
@@ -194,15 +196,34 @@ custom_stacks:
 
 See `custom_stacks_example.yaml` for complete examples.
 
-## How Success is Detected
+## How Claude Cache Learns (Important!)
 
-The system analyzes multiple indicators to determine successful patterns:
+Claude Cache learns from **success signals** in your conversations. **You need to provide feedback when things work!**
 
-- **Test Results** - Sessions where tests pass
-- **Error-Free Execution** - No exceptions or errors
-- **File Modifications** - Successful edits and writes
-- **User Satisfaction** - Positive feedback indicators
-- **Task Completion** - Explicit completion markers
+### What Triggers Learning
+
+When Claude helps you successfully, say things like:
+- ✅ **"Perfect!"**, **"That worked!"**, **"Thanks!"**
+- ✅ **"Great, tests pass now"**, **"No more errors"**
+- ✅ **"Excellent"**, **"Fixed the issue"**
+
+### Example Conversation
+
+```
+You: "Add user authentication"
+Claude: *implements auth code*
+You: "Perfect! The login works now"  ← Cache learns this pattern!
+```
+
+Without feedback, Cache won't know if the solution worked and won't save the pattern.
+
+### Automatic Detection
+
+The system also detects:
+- **Test Results** - "Tests passed", "Build successful" in output
+- **Error-Free Execution** - No exceptions after changes
+- **File Modifications** - Successful edits without errors
+- **Success Markers** - ✓, ✅, "SUCCESS" in output
 
 Sessions scoring above 70% are stored as successful patterns.
 
