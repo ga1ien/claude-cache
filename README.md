@@ -51,11 +51,6 @@ When you switch between projects in Claude Code, Claude Cache automatically swit
 
 ## Installation
 
-### From PyPI (coming soon)
-```bash
-pip install claude-cache
-```
-
 ### From Source
 ```bash
 git clone https://github.com/yourusername/claude-cache.git
