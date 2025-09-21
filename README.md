@@ -6,6 +6,21 @@ Claude Cache automatically processes your Claude Code logs, identifies successfu
 
 *Note: This is an independent tool for enhancing Claude Code, not an official Anthropic product.*
 
+## 🚨 Important: How Claude Cache Learns
+
+**Claude Cache learns from your feedback!** When Claude helps you successfully, you must tell it:
+
+- Say **"Perfect!"**, **"That worked!"**, or **"Thanks!"** when things work
+- Without feedback, Cache won't know what succeeded and won't save patterns
+- More feedback = Better memory = Smarter Claude
+
+Example:
+```
+You: "Add user authentication"
+Claude: *implements auth*
+You: "Perfect! The login works now" ← This triggers learning!
+```
+
 ## Features
 
 - **Automatic Log Processing** - Monitors and processes Claude Code session logs in real-time
@@ -196,30 +211,15 @@ custom_stacks:
 
 See `custom_stacks_example.yaml` for complete examples.
 
-## How Claude Cache Learns (Important!)
+## How Success Detection Works
 
-Claude Cache learns from **success signals** in your conversations. **You need to provide feedback when things work!**
+Claude Cache uses multiple signals to identify successful patterns:
 
-### What Triggers Learning
-
-When Claude helps you successfully, say things like:
-- ✅ **"Perfect!"**, **"That worked!"**, **"Thanks!"**
-- ✅ **"Great, tests pass now"**, **"No more errors"**
-- ✅ **"Excellent"**, **"Fixed the issue"**
-
-### Example Conversation
-
-```
-You: "Add user authentication"
-Claude: *implements auth code*
-You: "Perfect! The login works now"  ← Cache learns this pattern!
-```
-
-Without feedback, Cache won't know if the solution worked and won't save the pattern.
+### Your Feedback (Most Important!)
+- **User satisfaction** - "Perfect!", "That worked!", "Thanks!"
+- **Task completion** - "Fixed!", "Done!", "Working now!"
 
 ### Automatic Detection
-
-The system also detects:
 - **Test Results** - "Tests passed", "Build successful" in output
 - **Error-Free Execution** - No exceptions after changes
 - **File Modifications** - Successful edits without errors
