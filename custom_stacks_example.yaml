@@ -1,0 +1,307 @@
+# Example: Adding Custom Tech Stacks to config.yaml
+# Copy these examples into your config.yaml and modify for your needs
+
+# ============================================
+# EXAMPLE 1: Rust/Actix Web Stack
+# ============================================
+custom_stacks:
+  rust_backend:
+    keywords:
+      - "cargo"
+      - "rustc"
+      - "actix"
+      - "tokio"
+      - "diesel"
+      - "serde"
+      - "trait"
+      - "impl"
+    file_patterns:
+      - "*.rs"
+      - "Cargo.toml"
+      - "src/*.rs"
+    success_indicators:
+      - "compiles successfully"
+      - "no lifetime errors"
+      - "tests pass"
+      - "cargo clippy clean"
+      - "no unsafe blocks"
+      - "zero-cost abstraction"
+    failure_indicators:
+      - "borrow checker"
+      - "lifetime error"
+      - "move occurs"
+      - "trait not implemented"
+    weight_multiplier: 1.3
+
+# ============================================
+# EXAMPLE 2: Elixir/Phoenix Stack
+# ============================================
+  elixir_phoenix:
+    keywords:
+      - "elixir"
+      - "phoenix"
+      - "genserver"
+      - "liveview"
+      - "ecto"
+      - "otp"
+    file_patterns:
+      - "*.ex"
+      - "*.exs"
+      - "mix.exs"
+    success_indicators:
+      - "genserver working"
+      - "liveview updates"
+      - "pubsub working"
+      - "ecto migration"
+      - "tests green"
+    failure_indicators:
+      - "process crashed"
+      - "supervision tree"
+      - "deadlock"
+    weight_multiplier: 1.2
+
+# ============================================
+# EXAMPLE 3: Go/Gin Stack
+# ============================================
+  golang:
+    keywords:
+      - "golang"
+      - "gin"
+      - "gorm"
+      - "goroutine"
+      - "channel"
+      - "interface"
+    file_patterns:
+      - "*.go"
+      - "go.mod"
+      - "go.sum"
+    success_indicators:
+      - "go build successful"
+      - "no race conditions"
+      - "goroutine safe"
+      - "tests pass"
+      - "benchmarks improved"
+    failure_indicators:
+      - "panic"
+      - "deadlock"
+      - "race condition"
+      - "nil pointer"
+    weight_multiplier: 1.25
+
+# ============================================
+# EXAMPLE 4: Svelte/SvelteKit
+# ============================================
+  svelte:
+    keywords:
+      - "svelte"
+      - "sveltekit"
+      - "$:"
+      - "writable"
+      - "derived"
+      - "+page"
+      - "+layout"
+    file_patterns:
+      - "*.svelte"
+      - "+page.svelte"
+      - "+layout.svelte"
+      - "+server.js"
+    success_indicators:
+      - "component reactive"
+      - "store working"
+      - "transitions smooth"
+      - "SSR working"
+      - "hydration successful"
+    failure_indicators:
+      - "hydration mismatch"
+      - "store not updating"
+      - "undefined variable"
+    weight_multiplier: 1.2
+
+# ============================================
+# EXAMPLE 5: Data Science Stack
+# ============================================
+  data_science:
+    keywords:
+      - "pandas"
+      - "numpy"
+      - "sklearn"
+      - "tensorflow"
+      - "pytorch"
+      - "jupyter"
+      - "dataframe"
+      - "model"
+    file_patterns:
+      - "*.ipynb"
+      - "*.py"
+      - "notebooks/*.ipynb"
+    success_indicators:
+      - "model trained"
+      - "accuracy improved"
+      - "loss decreased"
+      - "data cleaned"
+      - "visualization created"
+      - "feature engineering"
+    failure_indicators:
+      - "nan values"
+      - "dimension mismatch"
+      - "out of memory"
+      - "overfitting"
+    weight_multiplier: 1.3
+
+# ============================================
+# EXAMPLE 6: Game Development (Unity/Godot)
+# ============================================
+  game_dev:
+    keywords:
+      - "unity"
+      - "godot"
+      - "unreal"
+      - "gameobject"
+      - "shader"
+      - "collision"
+      - "physics"
+    file_patterns:
+      - "*.cs"
+      - "*.gd"
+      - "*.shader"
+      - "*.unity"
+    success_indicators:
+      - "fps stable"
+      - "collision working"
+      - "animation smooth"
+      - "shader compiled"
+      - "input responsive"
+    failure_indicators:
+      - "null reference"
+      - "performance spike"
+      - "z-fighting"
+      - "memory leak"
+    weight_multiplier: 1.2
+
+# ============================================
+# EXAMPLE 7: Infrastructure as Code
+# ============================================
+  infrastructure:
+    keywords:
+      - "terraform"
+      - "ansible"
+      - "cloudformation"
+      - "pulumi"
+      - "helm"
+      - "kubernetes"
+    file_patterns:
+      - "*.tf"
+      - "*.yaml"
+      - "*.yml"
+      - "Dockerfile"
+      - "values.yaml"
+    success_indicators:
+      - "plan successful"
+      - "applied cleanly"
+      - "pods running"
+      - "health check passing"
+      - "deployment successful"
+    failure_indicators:
+      - "resource conflict"
+      - "permission denied"
+      - "quota exceeded"
+      - "connection timeout"
+    weight_multiplier: 1.3
+
+# ============================================
+# EXAMPLE 8: Blockchain/Web3
+# ============================================
+  blockchain:
+    keywords:
+      - "solidity"
+      - "ethereum"
+      - "web3"
+      - "smart contract"
+      - "metamask"
+      - "hardhat"
+      - "truffle"
+    file_patterns:
+      - "*.sol"
+      - "hardhat.config.js"
+      - "truffle-config.js"
+    success_indicators:
+      - "contract deployed"
+      - "tests passing"
+      - "gas optimized"
+      - "no reentrancy"
+      - "audit passed"
+    failure_indicators:
+      - "revert"
+      - "out of gas"
+      - "reentrancy"
+      - "overflow"
+    weight_multiplier: 1.4
+
+# ============================================
+# EXAMPLE 9: Low-Level/Embedded
+# ============================================
+  embedded:
+    keywords:
+      - "arduino"
+      - "esp32"
+      - "stm32"
+      - "embedded"
+      - "rtos"
+      - "interrupt"
+      - "gpio"
+    file_patterns:
+      - "*.ino"
+      - "*.c"
+      - "*.cpp"
+      - "*.h"
+    success_indicators:
+      - "uploaded successfully"
+      - "serial working"
+      - "interrupt handled"
+      - "power optimized"
+      - "timing correct"
+    failure_indicators:
+      - "watchdog reset"
+      - "stack overflow"
+      - "brownout"
+      - "timing violation"
+    weight_multiplier: 1.3
+
+# ============================================
+# HOW TO ADD YOUR OWN STACK
+# ============================================
+# 1. Copy this template:
+  your_custom_stack:
+    keywords:
+      - "your_keyword_1"  # Words that identify this stack
+      - "your_keyword_2"
+    file_patterns:
+      - "*.your_extension"  # File patterns to match
+      - "your_folder/*"
+    success_indicators:
+      - "your success phrase"  # What indicates success?
+      - "another win condition"
+    failure_indicators:
+      - "error indicator"  # What indicates failure?
+      - "another failure sign"
+    weight_multiplier: 1.2  # How important is this stack (1.0 = normal)
+
+# ============================================
+# COMBINING STACKS
+# ============================================
+# You can also define composite stacks:
+  fullstack_typescript:
+    includes:  # Inherit from other stacks
+      - frontend
+      - backend
+      - database
+    additional_keywords:
+      - "prisma"
+      - "trpc"
+      - "turborepo"
+      - "monorepo"
+    success_indicators:
+      - "type safety maintained"
+      - "end-to-end working"
+      - "schema synchronized"
+    weight_multiplier: 1.4

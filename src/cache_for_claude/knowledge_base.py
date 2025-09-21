@@ -1,0 +1,373 @@
+"""Knowledge base storage and retrieval system"""
+
+import sqlite3
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import List, Dict, Any, Optional
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from rich.console import Console
+
+console = Console()
+
+
+class KnowledgeBase:
+    """Store and retrieve successful patterns and project conventions"""
+
+    def __init__(self, db_path: str = None):
+        if db_path is None:
+            db_dir = Path.home() / '.claude' / 'knowledge'
+            db_dir.mkdir(parents=True, exist_ok=True)
+            db_path = db_dir / 'cache.db'
+
+        self.db_path = str(db_path)
+        self.setup_database()
+        self.vectorizer = TfidfVectorizer(max_features=1000)
+
+    def setup_database(self):
+        """Create database tables"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS success_patterns (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_name TEXT NOT NULL,
+                request_type TEXT,
+                user_request TEXT,
+                approach TEXT,
+                files_involved TEXT,
+                solution_steps TEXT,
+                key_operations TEXT,
+                timestamp DATETIME,
+                success_score REAL,
+                tags TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS project_conventions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_name TEXT NOT NULL,
+                convention_type TEXT,
+                pattern TEXT,
+                description TEXT,
+                frequency INTEGER DEFAULT 1,
+                last_seen DATETIME,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_requests (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_name TEXT,
+                content TEXT,
+                request_type TEXT,
+                timestamp DATETIME,
+                source_file TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tool_usage (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_name TEXT,
+                tool TEXT,
+                args TEXT,
+                success BOOLEAN,
+                timestamp DATETIME,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS responses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_name TEXT,
+                content TEXT,
+                reasoning TEXT,
+                timestamp DATETIME,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_patterns_project
+            ON success_patterns(project_name)
+        ''')
+
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_conventions_project
+            ON project_conventions(project_name)
+        ''')
+
+        conn.commit()
+        conn.close()
+
+        console.print(f"[green]✓ Knowledge base initialized at {self.db_path}[/green]")
+
+    def store_success_pattern(self, pattern: Dict, project_name: str, success_score: float = 1.0):
+        """Store a successful pattern"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            INSERT INTO success_patterns
+            (project_name, request_type, user_request, approach, files_involved,
+             solution_steps, key_operations, timestamp, success_score, tags)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            project_name,
+            pattern.get('request_type', 'unknown'),
+            pattern.get('user_request', ''),
+            pattern.get('approach', ''),
+            json.dumps(pattern.get('files_involved', [])),
+            json.dumps(pattern.get('solution_steps', [])),
+            json.dumps(pattern.get('key_operations', [])),
+            pattern.get('timestamp', datetime.now().isoformat()),
+            success_score,
+            json.dumps(pattern.get('tags', []))
+        ))
+
+        conn.commit()
+        conn.close()
+
+        console.print(f"[green]✓ Stored success pattern for {project_name}[/green]")
+
+    def store_request(self, request_data: Dict):
+        """Store a user request"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            INSERT INTO user_requests
+            (project_name, content, request_type, timestamp, source_file)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (
+            request_data.get('project', 'unknown'),
+            request_data.get('content', ''),
+            request_data.get('type', 'other'),
+            request_data.get('timestamp', datetime.now().isoformat()),
+            request_data.get('source', '')
+        ))
+
+        conn.commit()
+        conn.close()
+
+    def store_tool_usage(self, tool_data: Dict):
+        """Store tool usage data"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            INSERT INTO tool_usage
+            (project_name, tool, args, success, timestamp)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (
+            tool_data.get('project', 'unknown'),
+            tool_data.get('tool', ''),
+            json.dumps(tool_data.get('args', {})),
+            tool_data.get('success', True),
+            tool_data.get('timestamp', datetime.now().isoformat())
+        ))
+
+        conn.commit()
+        conn.close()
+
+    def store_response(self, response_data: Dict):
+        """Store assistant response"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            INSERT INTO responses
+            (project_name, content, reasoning, timestamp)
+            VALUES (?, ?, ?, ?)
+        ''', (
+            response_data.get('project', 'unknown'),
+            response_data.get('content', ''),
+            response_data.get('reasoning', ''),
+            response_data.get('timestamp', datetime.now().isoformat())
+        ))
+
+        conn.commit()
+        conn.close()
+
+    def find_similar_patterns(self, current_request: str, project_name: str, threshold: float = 0.3) -> List[Dict]:
+        """Find similar successful patterns"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT id, user_request, approach, solution_steps, success_score, files_involved, key_operations
+            FROM success_patterns
+            WHERE project_name = ?
+            ORDER BY success_score DESC
+            LIMIT 100
+        ''', (project_name,))
+
+        patterns = cursor.fetchall()
+        conn.close()
+
+        if not patterns:
+            return []
+
+        requests = [current_request] + [p[1] for p in patterns]
+
+        try:
+            tfidf_matrix = self.vectorizer.fit_transform(requests)
+            similarities = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
+        except:
+            similarities = [0] * len(patterns)
+
+        similar_patterns = []
+        for i, (pattern_id, request, approach, steps, score, files, operations) in enumerate(patterns):
+            if similarities[i] > threshold:
+                similar_patterns.append({
+                    'id': pattern_id,
+                    'request': request,
+                    'approach': approach,
+                    'solution_steps': json.loads(steps) if steps else [],
+                    'files_involved': json.loads(files) if files else [],
+                    'key_operations': json.loads(operations) if operations else [],
+                    'success_score': score,
+                    'similarity': similarities[i]
+                })
+
+        return sorted(similar_patterns, key=lambda x: x['similarity'], reverse=True)[:5]
+
+    def get_project_conventions(self, project_name: str) -> List[Dict]:
+        """Get conventions for a project"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT convention_type, pattern, description, frequency
+            FROM project_conventions
+            WHERE project_name = ?
+            ORDER BY frequency DESC
+        ''', (project_name,))
+
+        conventions = []
+        for row in cursor.fetchall():
+            conventions.append({
+                'type': row[0],
+                'pattern': row[1],
+                'description': row[2],
+                'frequency': row[3]
+            })
+
+        conn.close()
+        return conventions
+
+    def store_convention(self, project_name: str, convention_type: str, pattern: str, description: str = ''):
+        """Store or update a project convention"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT id, frequency FROM project_conventions
+            WHERE project_name = ? AND convention_type = ? AND pattern = ?
+        ''', (project_name, convention_type, pattern))
+
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.execute('''
+                UPDATE project_conventions
+                SET frequency = frequency + 1, last_seen = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ''', (existing[0],))
+        else:
+            cursor.execute('''
+                INSERT INTO project_conventions
+                (project_name, convention_type, pattern, description, last_seen)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ''', (project_name, convention_type, pattern, description))
+
+        conn.commit()
+        conn.close()
+
+    def get_statistics(self, project_name: Optional[str] = None) -> Dict:
+        """Get statistics about the knowledge base"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        stats = {}
+
+        if project_name:
+            cursor.execute('SELECT COUNT(*) FROM success_patterns WHERE project_name = ?', (project_name,))
+            stats['patterns'] = cursor.fetchone()[0]
+
+            cursor.execute('SELECT COUNT(*) FROM project_conventions WHERE project_name = ?', (project_name,))
+            stats['conventions'] = cursor.fetchone()[0]
+
+            cursor.execute('SELECT COUNT(*) FROM user_requests WHERE project_name = ?', (project_name,))
+            stats['requests'] = cursor.fetchone()[0]
+        else:
+            cursor.execute('SELECT COUNT(*) FROM success_patterns')
+            stats['total_patterns'] = cursor.fetchone()[0]
+
+            cursor.execute('SELECT COUNT(DISTINCT project_name) FROM success_patterns')
+            stats['projects'] = cursor.fetchone()[0]
+
+            cursor.execute('SELECT COUNT(*) FROM user_requests')
+            stats['total_requests'] = cursor.fetchone()[0]
+
+        conn.close()
+        return stats
+
+    def export_patterns(self, project_name: Optional[str] = None) -> Dict:
+        """Export patterns for sharing or backup"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        if project_name:
+            cursor.execute('''
+                SELECT * FROM success_patterns
+                WHERE project_name = ?
+            ''', (project_name,))
+        else:
+            cursor.execute('SELECT * FROM success_patterns')
+
+        columns = [description[0] for description in cursor.description]
+        patterns = []
+
+        for row in cursor.fetchall():
+            pattern_dict = dict(zip(columns, row))
+
+            for field in ['files_involved', 'solution_steps', 'key_operations', 'tags']:
+                if field in pattern_dict and pattern_dict[field]:
+                    try:
+                        pattern_dict[field] = json.loads(pattern_dict[field])
+                    except:
+                        pass
+
+            patterns.append(pattern_dict)
+
+        conn.close()
+
+        return {
+            'version': '1.0',
+            'exported_at': datetime.now().isoformat(),
+            'project': project_name or 'all',
+            'patterns': patterns
+        }
+
+    def import_patterns(self, data: Dict):
+        """Import patterns from export"""
+        patterns = data.get('patterns', [])
+
+        for pattern in patterns:
+            for field in ['files_involved', 'solution_steps', 'key_operations', 'tags']:
+                if field in pattern and isinstance(pattern[field], list):
+                    pattern[field] = json.dumps(pattern[field])
+
+            self.store_success_pattern(pattern, pattern.get('project_name', 'imported'))
+
+        console.print(f"[green]✓ Imported {len(patterns)} patterns[/green]")

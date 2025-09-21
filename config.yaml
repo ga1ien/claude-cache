@@ -1,0 +1,177 @@
+# Claude Cache Configuration
+# Customize detection patterns and success criteria for your projects
+
+# Global Settings
+global:
+  min_success_score: 0.7  # Minimum score to consider a pattern successful
+  monitoring_interval: 1   # Seconds between log checks
+  database_path: ~/.claude/knowledge/cache.db
+
+# Stack-Specific Success Weights
+# Adjust these based on what matters most for each tech stack
+stack_weights:
+  frontend:
+    user_satisfied: 0.3
+    no_console_errors: 0.25
+    component_renders: 0.25
+    tests_pass: 0.2
+
+  backend:
+    tests_pass: 0.35
+    api_working: 0.3
+    no_errors: 0.2
+    performance: 0.15
+
+  database:
+    query_optimized: 0.3
+    no_errors: 0.3
+    migration_successful: 0.25
+    indexed: 0.15
+
+  mobile:
+    builds_successfully: 0.3
+    no_crashes: 0.3
+    performs_well: 0.2
+    ux_working: 0.2
+
+# Custom Pattern Detection
+# Add your own patterns to detect success
+custom_patterns:
+  # React/Next.js specific
+  react_success:
+    keywords:
+      - "useEffect working"
+      - "state updated correctly"
+      - "context provider"
+      - "memo optimization"
+    weight: 1.3
+
+  # Node.js/Express specific
+  node_success:
+    keywords:
+      - "middleware working"
+      - "async handling"
+      - "error boundary"
+    weight: 1.2
+
+  # Python/Django specific
+  django_success:
+    keywords:
+      - "view working"
+      - "serializer validated"
+      - "migration applied"
+    weight: 1.2
+
+# Project-Specific Overrides
+# Customize settings per project
+projects:
+  my-frontend-app:
+    primary_stack: frontend
+    success_threshold: 0.75
+    extra_patterns:
+      - "lighthouse score improved"
+      - "accessibility fixed"
+
+  my-api-service:
+    primary_stack: backend
+    success_threshold: 0.8
+    extra_patterns:
+      - "rate limiting implemented"
+      - "cache hit ratio improved"
+
+  my-mobile-app:
+    primary_stack: mobile
+    success_threshold: 0.7
+    extra_patterns:
+      - "app store approved"
+      - "offline mode working"
+
+# Quality Indicators
+# Terms that indicate high-quality solutions
+quality_indicators:
+  performance:
+    - optimized
+    - faster
+    - reduced bundle size
+    - lazy loaded
+    - cached
+    - memoized
+
+  security:
+    - sanitized
+    - validated
+    - authenticated
+    - encrypted
+    - rate limited
+
+  maintainability:
+    - refactored
+    - documented
+    - typed
+    - tested
+    - clean code
+
+  user_experience:
+    - accessible
+    - responsive
+    - intuitive
+    - smooth animation
+    - error feedback
+
+# Failure Indicators
+# Terms that reduce success score
+failure_indicators:
+  critical:
+    - "build failed"
+    - "deployment failed"
+    - "data loss"
+    - "security breach"
+    weight: -0.5
+
+  major:
+    - "test failed"
+    - "breaking change"
+    - "performance regression"
+    weight: -0.3
+
+  minor:
+    - "warning"
+    - "deprecated"
+    - "todo"
+    weight: -0.1
+
+# Framework Detection
+# Automatically detect frameworks from file patterns
+framework_detection:
+  nextjs:
+    files:
+      - next.config.js
+      - pages/*
+      - app/*
+    patterns:
+      - getServerSideProps
+      - getStaticProps
+
+  django:
+    files:
+      - manage.py
+      - settings.py
+      - urls.py
+    patterns:
+      - django.contrib
+      - ModelSerializer
+
+  rails:
+    files:
+      - Gemfile
+      - config.ru
+      - app/controllers/*
+    patterns:
+      - ActiveRecord
+      - ApplicationController
+
+# Export Settings
+export:
+  include_failed_patterns: false
+  anonymize_paths: false
+  max_export_size_mb: 50

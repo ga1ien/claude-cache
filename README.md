@@ -1,0 +1,264 @@
+# Claude Cache
+
+**Memory for your AI coding assistant**
+
+Claude Cache automatically processes your Claude Code logs, identifies successful patterns, and builds memory that reduces AI hallucinations and improves coding effectiveness.
+
+*Note: This is an independent tool for enhancing Claude Code, not an official Anthropic product.*
+
+## Features
+
+- **Automatic Log Processing** - Monitors and processes Claude Code session logs in real-time
+- **Success Pattern Detection** - Identifies which approaches worked well for specific tasks
+- **Context Generation** - Creates relevant context for similar future requests
+- **Slash Commands** - Generates Claude Code slash commands for quick access to patterns
+- **Convention Tracking** - Learns your project's coding conventions and patterns
+- **Team Knowledge Sharing** - Export and import patterns for team collaboration
+
+## How It Works
+
+1. **Monitor** - Watches your Claude Code log files (`~/.claude/projects/`)
+2. **Analyze** - Detects successful patterns using multiple indicators
+3. **Store** - Builds a searchable knowledge base with SQLite
+4. **Generate** - Creates slash commands and context files
+5. **Learn** - Improves Claude's responses with personalized context
+
+## Installation
+
+### From PyPI (coming soon)
+```bash
+pip install claude-cache
+```
+
+### From Source
+```bash
+git clone https://github.com/yourusername/claude-cache.git
+cd claude-cache
+pip install -e .
+```
+
+## Quick Start
+
+1. **Start monitoring your Claude Code logs:**
+```bash
+cache start
+```
+
+2. **Use Claude Code as normal** - Claude Cache will automatically process your interactions
+
+3. **Access your patterns** via slash commands in Claude Code:
+- `/project-context [task description]` - Get relevant patterns for your current task
+- `/best-practices` - View successful approaches
+- `/conventions` - See detected project conventions
+- `/quick-ref` - Quick reference for frequently used files
+- `/debug-helper` - Get debugging assistance
+
+## Usage
+
+### Basic Commands
+
+```bash
+# Start monitoring and processing logs
+cache start
+
+# Process existing logs without monitoring
+cache process
+
+# Query patterns from your knowledge base
+cache query "implement authentication"
+
+# Show statistics
+cache stats
+
+# Generate slash commands for a project
+cache generate --project my-project
+```
+
+### Advanced Usage
+
+```bash
+# Export patterns for backup or sharing
+cache export patterns.json --project my-project
+
+# Import patterns from team member
+cache import team-patterns.json
+
+# Rebuild knowledge base from scratch
+cache rebuild --confirm
+
+# Generate context for specific request
+cache context "fix login bug" --project my-app
+```
+
+## Configuration
+
+Claude Cache stores its database at:
+```
+~/.claude/knowledge/cache.db
+```
+
+Slash commands are generated in your project's `.claude/commands/` directory.
+
+### Fine-Tuning Detection
+
+The tool automatically detects and adapts to different tech stacks:
+
+**Built-in Stack Detection:**
+- **Frontend**: React, Vue, Angular, CSS, Tailwind
+- **Backend**: APIs, Express, Django, Rails
+- **Database**: SQL, migrations, ORMs, query optimization
+- **Mobile**: React Native, Expo, Flutter
+- **DevOps**: Docker, Kubernetes, CI/CD
+- **Testing**: Jest, Pytest, Cypress
+
+**Customization via `config.yaml`:**
+```yaml
+# Adjust success weights for your stack
+stack_weights:
+  frontend:
+    user_satisfied: 0.3
+    no_console_errors: 0.25
+    component_renders: 0.25
+
+# Add custom success patterns
+custom_patterns:
+  react_success:
+    keywords:
+      - "useEffect working"
+      - "state updated correctly"
+    weight: 1.3
+```
+
+**Per-Project Configuration:**
+```yaml
+projects:
+  my-frontend-app:
+    primary_stack: frontend
+    success_threshold: 0.75
+    extra_patterns:
+      - "lighthouse score improved"
+```
+
+The tool learns what "success" means for YOUR specific tech stack and coding patterns.
+
+### Adding Custom Tech Stacks
+
+**Any tech stack can be added!** Edit `config.yaml`:
+
+```yaml
+custom_stacks:
+  your_stack_name:
+    keywords: ["your", "stack", "keywords"]
+    file_patterns: ["*.ext", "folder/*"]
+    success_indicators:
+      - "compilation successful"
+      - "your success condition"
+    failure_indicators:
+      - "your error pattern"
+    weight_multiplier: 1.3
+```
+
+**Examples included for:**
+- Rust/Actix, Elixir/Phoenix, Go/Gin
+- Svelte/SvelteKit, Game Development (Unity/Godot)
+- Data Science (Pandas/PyTorch), Blockchain/Web3
+- Infrastructure as Code, Embedded Systems
+
+See `custom_stacks_example.yaml` for complete examples.
+
+## How Success is Detected
+
+The system analyzes multiple indicators to determine successful patterns:
+
+- **Test Results** - Sessions where tests pass
+- **Error-Free Execution** - No exceptions or errors
+- **File Modifications** - Successful edits and writes
+- **User Satisfaction** - Positive feedback indicators
+- **Task Completion** - Explicit completion markers
+
+Sessions scoring above 70% are stored as successful patterns.
+
+## Pattern Matching
+
+When you make a new request, the system:
+
+1. Searches for similar previous requests using TF-IDF vectorization
+2. Ranks patterns by similarity and success score
+3. Generates context from the most relevant patterns
+4. Injects this context to improve Claude's response
+
+## Project Structure
+
+```
+claude-cache/
+├── src/
+│   └── cache_for_claude/
+│       ├── __init__.py
+│       ├── agent.py          # Main coordination agent
+│       ├── cli.py            # Command-line interface
+│       ├── context_injector.py # Context and command generation
+│       ├── knowledge_base.py  # Database storage
+│       ├── log_processor.py   # Log parsing
+│       ├── log_watcher.py     # File monitoring
+│       └── success_detector.py # Pattern detection
+├── pyproject.toml
+└── README.md
+```
+
+## Privacy & Security
+
+- All data is stored locally on your machine
+- No data is sent to external services
+- Sensitive information in logs remains private
+- Export/import allows controlled sharing
+
+## Use Cases
+
+### For Individual Developers
+- Build a personal knowledge base of what works
+- Reduce repetitive explanations to Claude
+- Speed up problem-solving with historical context
+- Track your most successful coding patterns
+
+### For Teams
+- Share successful patterns across team members
+- Maintain consistent approaches to common tasks
+- Onboard new developers with team-specific knowledge
+- Build collective intelligence from everyone's interactions
+
+### For Projects
+- Document project-specific conventions automatically
+- Track which files are frequently modified together
+- Identify common debugging patterns
+- Maintain project-specific context
+
+## Contributing
+
+Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## Roadmap
+
+- [ ] Web dashboard for pattern visualization
+- [ ] Integration with other AI coding tools
+- [ ] Pattern clustering and categorization
+- [ ] Automated pattern quality scoring
+- [ ] Multi-project pattern correlation
+- [ ] VSCode extension for pattern access
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+Inspired by the insight that "if you document along the way, AI hallucinates less because it has more documentation that's personalized to the project."
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/claude-cache/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/claude-cache/discussions)
+- **Documentation**: [Full Documentation](https://github.com/yourusername/claude-cache/wiki)
+
+---
+
+**Note**: This tool is not officially affiliated with Anthropic or Claude. It's a community tool designed to enhance your Claude Code experience.
