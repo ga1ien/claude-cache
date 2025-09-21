@@ -61,20 +61,39 @@ cache process
 # ✓ Generated context for my-project
 ```
 
-### Start Background Monitoring
-```bash
-# Option 1: Run in background (recommended)
-cache start --daemon
+### Start Monitoring
 
-# Option 2: Run in foreground (see live updates)
+#### Option 1: Run in Terminal Tab (Simplest)
+```bash
+# Open a new terminal tab and run:
 cache start
 
 # You'll see:
 # ╔═══════════════════════════════════════════╗
-# ║     Claude Cache v0.1.0                  ║
+# ║              claude                       ║
+# ║     CACHE v0.1.0                         ║
 # ╚═══════════════════════════════════════════╝
 # ✓ Monitoring Claude Code logs
+
+# Leave this terminal tab open while you work
 ```
+
+#### Option 2: Use tmux (Recommended for long-term use)
+```bash
+# Install tmux first (one-time setup)
+brew install tmux
+
+# Start tmux session
+tmux new -s cache
+
+# Inside tmux, run:
+cache start
+
+# Detach with Ctrl+B then D (leaves it running)
+# Reattach later with: tmux attach -t cache
+```
+
+**Note:** The `--daemon` flag has compatibility issues on macOS. Use tmux or a dedicated terminal tab instead.
 
 ---
 
@@ -238,10 +257,15 @@ cache query "auth" --project "api"   # Search in one project
 ## 🎮 Common Commands
 
 ```bash
-# Background Operations
-cache start --daemon    # Start in background
-cache daemon stop      # Stop background process
-cache daemon status    # Check if running
+# Starting and Stopping
+cache start            # Start in terminal (keep tab open)
+# Ctrl+C to stop
+
+# Using with tmux
+tmux new -s cache      # Create tmux session
+tmux attach -t cache   # Reattach to session
+tmux ls               # List sessions
+tmux kill-session -t cache  # Stop session
 
 # Data Management
 cache process          # Process existing logs
@@ -266,14 +290,14 @@ cache import team-patterns.json  # Import team patterns
 1. **File exists**: Look for `.claude/CLAUDE.md` in your project
 2. **Stats growing**: Run `cache stats` - numbers should increase
 3. **Claude references past patterns**: Claude mentions "I see you've done X before"
-4. **Daemon running**: `cache daemon status` shows "✓ Running"
+4. **Cache running**: Check your terminal tab or tmux session
 
 ### Live Example
 
 ```bash
-# 1. Check if daemon is running
-$ cache daemon status
-✓ Claude Cache daemon is running (PID: 12345)
+# 1. Check if cache is running
+# In terminal: You see the live status display
+# In tmux: tmux ls shows "cache" session
 
 # 2. Check your stats
 $ cache stats
@@ -297,24 +321,26 @@ $ head .claude/CLAUDE.md
 ### Claude doesn't seem to see my patterns
 1. Check if `.claude/CLAUDE.md` exists in your project
 2. Run `cache process` to regenerate
-3. Make sure daemon is running: `cache daemon status`
+3. Make sure cache is running (check terminal or tmux)
 
 ### No patterns are being detected
 1. Use Claude Code for a few sessions first
 2. Check logs exist: `ls ~/.claude/projects/`
 3. Lower threshold in `config.yaml` if needed
 
-### Daemon won't start
+### Cache won't stay running
 ```bash
-# Stop any existing process
-cache daemon stop
+# Use tmux for persistent sessions:
+tmux new -s cache
+# Run cache start inside tmux
+# Detach with Ctrl+B then D
 
-# Remove stale PID file if needed
-rm ~/.claude/knowledge/cache.pid
-
-# Start fresh
-cache daemon start
+# Or just keep a terminal tab open with:
+cache start
 ```
+
+### macOS-specific issues
+The `--daemon` flag has compatibility issues on macOS. Use tmux or a dedicated terminal tab instead.
 
 ---
 

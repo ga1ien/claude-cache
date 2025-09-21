@@ -50,10 +50,27 @@ pip install -e .
 
 ## Quick Start
 
-1. **Start monitoring your Claude Code logs:**
+### Running Claude Cache
+
+**Option 1: Terminal Tab (Simplest)**
 ```bash
 cache start
+# Keep this terminal tab open
 ```
+
+**Option 2: tmux (Recommended for long sessions)**
+```bash
+# Install tmux (one-time)
+brew install tmux
+
+# Start in tmux
+tmux new -s cache
+cache start
+# Detach: Ctrl+B then D
+# Reattach: tmux attach -t cache
+```
+
+**Note:** The `--daemon` flag has issues on macOS. Use tmux or a terminal tab instead.
 
 2. **Use Claude Code as normal** - Claude Cache will automatically process your interactions
 
