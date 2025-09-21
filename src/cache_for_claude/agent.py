@@ -55,38 +55,44 @@ class CacheAgent:
 
     def process_existing_logs(self):
         """Process all existing log files with progress tracking"""
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            TimeElapsedColumn(),
-            console=console
-        ) as progress:
+        try:
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                TimeElapsedColumn(),
+                console=console
+            ) as progress:
 
-            # Process existing logs
-            task = progress.add_task("[cyan]Processing existing logs...", total=100)
-            self.watcher.process_existing_logs()
-            progress.update(task, advance=30)
+                # Process existing logs
+                task = progress.add_task("[cyan]Processing existing logs...", total=100)
+                self.watcher.process_existing_logs()
+                progress.update(task, advance=30)
 
-            projects = self.get_projects()
-            if projects:
-                per_project = 70 // len(projects)
+                projects = self.get_projects()
+                if projects:
+                    per_project = 70 // len(projects)
 
-                for project in projects:
-                    progress.update(task, description=f"[cyan]Analyzing {project}...")
-                    self.analyze_project_sessions(project)
-                    progress.update(task, advance=per_project//3)
+                    for project in projects:
+                        progress.update(task, description=f"[cyan]Analyzing {project}...")
+                        self.analyze_project_sessions(project)
+                        progress.update(task, advance=per_project//3)
 
-                    self.injector.generate_all_commands(project)
-                    progress.update(task, advance=per_project//3)
+                        self.injector.generate_all_commands(project)
+                        progress.update(task, advance=per_project//3)
 
-                    self.injector.export_commands_to_claude_md(project)
-                    progress.update(task, advance=per_project//3)
+                        self.injector.export_commands_to_claude_md(project)
+                        progress.update(task, advance=per_project//3)
 
-            progress.update(task, completed=100, description="[green]✓ Processing complete!")
+                progress.update(task, completed=100, description="[green]✓ Processing complete!")
 
-        self.show_statistics()
+            self.show_statistics()
+        except Exception as e:
+            import traceback
+            console.print(f"[red]Error during log processing: {e}[/red]")
+            console.print(f"[dim]Traceback:\n{traceback.format_exc()}[/dim]")
+            raise
 
     def start_monitoring(self):
         """Start real-time log monitoring with context updates"""
@@ -134,8 +140,14 @@ class CacheAgent:
         file_operations = session.get('file_operations', [])
 
         for op in file_operations:
-            if op.data.get('tool') == 'Edit':
-                args = op.data.get('args', {})
+            # Handle both object and dict formats
+            if hasattr(op, 'data'):
+                data = op.data
+            else:
+                data = op if isinstance(op, dict) else {}
+
+            if data.get('tool') == 'Edit':
+                args = data.get('args', {})
                 old_str = args.get('old_string', '')
                 new_str = args.get('new_string', '')
 
@@ -344,14 +356,16 @@ class CacheAgent:
         """Display ASCII art banner"""
         banner = """
     ╔═══════════════════════════════════════════╗
-    ║       _____ _                 _           ║
-    ║      / ____| |               | |          ║
-    ║     | |    | | __ _ _   _  __| | ___      ║
-    ║     | |    | |/ _` | | | |/ _` |/ _ \\     ║
-    ║     | |____| | (_| | |_| | (_| |  __/     ║
-    ║      \\_____|_|\\__,_|\\__,_|\\__,_|\\___|     ║
     ║                                           ║
-    ║            C A C H E   v0.1.0             ║
+    ║              claude                       ║
+    ║                                           ║
+    ║    ___    _    ____ _   _ _____           ║
+    ║   / __\\  / \\  / ___| | | | ____|          ║
+    ║  | |    / _ \\ | |   | |_| |  _|           ║
+    ║  | |__ / ___ \\| |___|  _  | |___          ║
+    ║   \\___/_/   \\_\\\\____|_| |_|_____|         ║
+    ║                                           ║
+    ║                v0.1.0                     ║
     ╚═══════════════════════════════════════════╝
         """
 

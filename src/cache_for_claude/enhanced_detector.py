@@ -61,7 +61,8 @@ class EnhancedSuccessDetector(SuccessDetector):
             base_result['stack_scores'] = stack_scores
 
             # Use enhanced score for success determination
-            if enhanced_score > 0.7:
+            # Ensure enhanced_score is a float
+            if isinstance(enhanced_score, (int, float)) and enhanced_score > 0.7:
                 base_result['success'] = True
                 if not base_result.get('pattern'):
                     base_result['pattern'] = self.extract_success_pattern(session_entries)
@@ -193,11 +194,20 @@ class EnhancedSuccessDetector(SuccessDetector):
     def _calculate_enhanced_score(self, base_score: float, stack_scores: Dict[str, float]) -> float:
         """Combine base and stack-specific scores"""
         if not stack_scores:
-            return base_score
+            return float(base_score) if base_score else 0.0
 
-        # Weight: 60% base score, 40% stack-specific
-        stack_avg = sum(stack_scores.values()) / len(stack_scores)
-        return (base_score * 0.6) + (stack_avg * 0.4)
+        try:
+            # Weight: 60% base score, 40% stack-specific
+            # Ensure all values are floats
+            base = float(base_score) if base_score else 0.0
+            stack_values = [float(v) for v in stack_scores.values() if isinstance(v, (int, float))]
+            if not stack_values:
+                return base
+            stack_avg = sum(stack_values) / len(stack_values)
+            return (base * 0.6) + (stack_avg * 0.4)
+        except (TypeError, ValueError):
+            # Fallback to base score if calculation fails
+            return float(base_score) if base_score else 0.0
 
     def _extract_stack_wins(self, entries: List[Dict], stacks: List[str]) -> Dict[str, List[str]]:
         """Extract specific wins for each stack"""

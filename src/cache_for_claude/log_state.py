@@ -33,10 +33,14 @@ class LogStateTracker:
         try:
             # Merge pending updates into state
             for file_path, position in self.pending_updates.items():
-                self.state[file_path] = position
+                # Ensure consistent format
+                if isinstance(position, dict):
+                    self.state[file_path] = position
+                else:
+                    self.state[file_path] = position
 
             with open(self.state_file, 'w') as f:
-                json.dump(self.state, f, indent=2)
+                json.dump(self.state, f, indent=2, default=str)
 
             self.pending_updates.clear()
         except IOError as e:
@@ -45,7 +49,11 @@ class LogStateTracker:
 
     def get_position(self, file_path: str) -> int:
         """Get the last processed position for a file"""
-        return self.state.get(file_path, 0)
+        file_state = self.state.get(file_path, 0)
+        # Handle both old format (int) and new format (dict)
+        if isinstance(file_state, dict):
+            return file_state.get('position', 0)
+        return file_state if isinstance(file_state, int) else 0
 
     def update_position(self, file_path: str, position: int):
         """Update the processed position for a file"""
