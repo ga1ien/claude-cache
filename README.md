@@ -23,6 +23,17 @@ Claude Cache automatically processes your Claude Code logs, identifies successfu
 4. **Generate** - Creates slash commands and context files
 5. **Learn** - Improves Claude's responses with personalized context
 
+### Multi-Project Support
+
+Claude Cache **automatically handles multiple projects** without any configuration:
+
+- **Automatic Detection** - Identifies different projects from Claude Code session logs
+- **Separate Knowledge Bases** - Each project gets its own patterns and context
+- **Project-Specific Learning** - React patterns for your frontend won't mix with Python patterns from your API
+- **Smart Context Injection** - Claude reads the right `.claude/CLAUDE.md` based on which project you're working in
+
+When you switch between projects in Claude Code, Claude Cache automatically switches context too!
+
 ## Installation
 
 ### From PyPI (coming soon)
@@ -231,6 +242,52 @@ claude-cache/
 - Track which files are frequently modified together
 - Identify common debugging patterns
 - Maintain project-specific context
+
+## Working with Multiple Projects
+
+Claude Cache seamlessly handles multiple projects. Here's what happens:
+
+### Automatic Project Separation
+```bash
+# When you work on different projects:
+~/Development/my-react-app     → Patterns stored under "my-react-app"
+~/Development/python-api        → Patterns stored under "python-api"
+~/Development/mobile-app        → Patterns stored under "mobile-app"
+```
+
+### Project-Specific Files Created
+```
+each-project/
+├── .claude/
+│   ├── CLAUDE.md              # This project's patterns & context
+│   └── commands/              # This project's slash commands
+```
+
+### Managing Multiple Projects
+```bash
+# View all projects
+cache stats
+
+# View specific project
+cache stats --project "my-react-app"
+
+# Export one project's patterns
+cache export react-patterns.json --project "my-react-app"
+
+# Query across all projects
+cache query "authentication"
+
+# Query one project only
+cache query "authentication" --project "python-api"
+```
+
+### How Claude Uses Project Context
+1. You open `my-react-app` in Cursor/Claude Code
+2. Claude automatically reads `my-react-app/.claude/CLAUDE.md`
+3. Claude now knows your React patterns, not your Python patterns
+4. Switch to `python-api` → Claude switches context automatically
+
+**No configuration needed** - it just works!
 
 ## Contributing
 

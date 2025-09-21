@@ -67,9 +67,26 @@ This ensures it learns from WINS, not failures!
 
 ## 2️⃣ How Context Gets Back to Claude
 
+### Multi-Project Architecture
+
+Claude Cache maintains **separate knowledge bases for each project**:
+
+```
+~/.claude/knowledge/cache.db
+├── Project: my-react-app
+│   ├── Patterns: React hooks, state management
+│   └── Conventions: JSX formatting, component structure
+├── Project: python-api
+│   ├── Patterns: FastAPI endpoints, SQLAlchemy models
+│   └── Conventions: Type hints, docstrings
+└── Project: mobile-app
+    ├── Patterns: React Native, Expo config
+    └── Conventions: Navigation, async storage
+```
+
 ### Method A: Automatic Context File (CLAUDE.md)
 
-The tool automatically creates/updates `.claude/CLAUDE.md` in your project:
+The tool automatically creates/updates `.claude/CLAUDE.md` in **each project**:
 
 ```markdown
 # Claude Cache Knowledge Base for your-project
@@ -167,25 +184,51 @@ def determine_what_to_learn(session):
     return pattern
 ```
 
-## 5️⃣ Real Example Flow
+## 5️⃣ How Projects Are Detected
 
-### Session 1 (Monday)
+Claude Cache automatically identifies projects from Claude Code session logs:
+
+```
+~/.claude/projects/
+├── -Users-galenoakes-Development-my-react-app/
+│   └── session-001.jsonl  → Detected as "my-react-app"
+├── -Users-galenoakes-Development-python-api/
+│   └── session-002.jsonl  → Detected as "python-api"
+└── -Users-galenoakes-Development-mobile-app/
+    └── session-003.jsonl  → Detected as "mobile-app"
+```
+
+**No configuration needed!** The project name comes from your folder structure.
+
+## 6️⃣ Real Example Flow
+
+### Session 1 (Monday) - React App
 ```bash
+# Working in ~/Development/my-react-app
 You: "Fix the login bug"
 Claude: *tries 3 approaches, finally fixes with JWT refresh*
-Claude Cache: ✓ Detected successful fix, saving pattern
+Claude Cache: ✓ Detected successful fix, saving to "my-react-app" patterns
 ```
 
-### Session 2 (Wednesday)
+### Session 2 (Tuesday) - Python API
 ```bash
+# Working in ~/Development/python-api
+You: "Add user authentication"
+Claude: *implements OAuth2 with FastAPI*
+Claude Cache: ✓ Detected successful pattern, saving to "python-api" patterns
+```
+
+### Session 3 (Wednesday) - Back to React App
+```bash
+# Working in ~/Development/my-react-app
 You: "Users can't stay logged in"
-# Claude automatically reads .claude/CLAUDE.md
+# Claude reads my-react-app/.claude/CLAUDE.md (NOT the Python patterns!)
 Claude: "I see we fixed a similar login issue using JWT refresh tokens.
         Let me check the same files: auth.js, middleware.js..."
-# Claude goes straight to the working solution!
+# Claude uses React-specific knowledge, not Python knowledge!
 ```
 
-## 6️⃣ Manual Context Loading
+## 7️⃣ Manual Context Loading
 
 If needed, you can explicitly load context:
 
@@ -199,7 +242,7 @@ cache query "authentication" --project my-app
 # Copy the output and paste into your Claude conversation
 ```
 
-## 7️⃣ Configuration for Better Learning
+## 8️⃣ Configuration for Better Learning
 
 Edit `config.yaml` to tune what gets learned:
 

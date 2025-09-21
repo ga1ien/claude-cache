@@ -203,6 +203,38 @@ cache start  # (without --daemon flag)
 
 ---
 
+## 🗂️ Multiple Projects? No Problem!
+
+Claude Cache **automatically handles all your projects**:
+
+```bash
+# Work on Project A
+cd ~/Development/my-react-app
+# Claude Code uses my-react-app patterns
+
+# Switch to Project B
+cd ~/Development/python-api
+# Claude Code automatically uses python-api patterns
+
+# Switch to Project C
+cd ~/Development/mobile-app
+# Claude Code automatically uses mobile-app patterns
+```
+
+**Each project gets its own:**
+- `.claude/CLAUDE.md` - Project-specific patterns
+- `.claude/commands/` - Project-specific slash commands
+- Separate knowledge base - No pattern mixing!
+
+**Check your projects:**
+```bash
+cache stats                          # See all projects
+cache stats --project "my-app"       # See specific project
+cache query "auth" --project "api"   # Search in one project
+```
+
+---
+
 ## 🎮 Common Commands
 
 ```bash
