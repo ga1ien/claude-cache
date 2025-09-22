@@ -2,7 +2,7 @@
 
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any
 from rich.console import Console
 from rich.live import Live
 from rich.table import Table
@@ -714,7 +714,7 @@ class CacheAgent:
     ║  | |__ / ___ \\| |___|  _  | |___          ║
     ║   \\___/_/   \\_\\\\____|_| |_|_____|         ║
     ║                                           ║
-    ║                v0.1.0                     ║
+    ║                v0.2.0                     ║
     ╚═══════════════════════════════════════════╝
         """
 
