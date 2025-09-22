@@ -13,13 +13,14 @@ console = Console()
 class RealtimeContextUpdater:
     """Automatically update context files when new patterns are detected"""
 
-    def __init__(self, knowledge_base, context_injector):
+    def __init__(self, knowledge_base, context_injector, silent=False):
         self.kb = knowledge_base
         self.injector = context_injector
         self.update_thread = None
         self.stop_event = threading.Event()
         self.last_update_times = {}
         self.update_interval = 30  # Update every 30 seconds if changes detected
+        self.silent = silent
 
     def start(self):
         """Start real-time context updates in background thread"""
@@ -29,7 +30,8 @@ class RealtimeContextUpdater:
         self.stop_event.clear()
         self.update_thread = threading.Thread(target=self._update_loop, daemon=True)
         self.update_thread.start()
-        console.print("[green]✓ Real-time context updates enabled[/green]")
+        if not self.silent:
+            console.print("[green]✓ Real-time context updates enabled[/green]")
 
     def stop(self):
         """Stop real-time updates"""
@@ -112,7 +114,8 @@ class RealtimeContextUpdater:
             self.last_update_times[project] = datetime.now()
 
             # Show notification (subtle, not spammy)
-            console.print(f"[dim cyan]↻ Updated context for {project}[/dim cyan]")
+            if not self.silent:
+                console.print(f"[dim cyan]↻ Updated context for {project}[/dim cyan]")
 
         except Exception as e:
             pass  # Silently fail to avoid disrupting main flow
@@ -128,7 +131,8 @@ class RealtimeContextUpdater:
             ).start()
 
             # Celebratory message for great patterns
-            console.print(f"[bold green]🎉 Excellent pattern detected in {project}![/bold green]")
+            if not self.silent:
+                console.print(f"[bold green]🎉 Excellent pattern detected in {project}![/bold green]")
 
 
 class HotReloadWatcher:

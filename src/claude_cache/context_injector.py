@@ -19,10 +19,11 @@ class ContextInjector:
     MAX_PATTERNS_IN_CONTEXT = 10
     MAX_DOCS_IN_CONTEXT = 5
 
-    def __init__(self, knowledge_base):
+    def __init__(self, knowledge_base, silent=False):
         self.kb = knowledge_base
         self.commands_dir = Path('.claude/commands')
         self.lessons_dir = Path('.claude/lessons')
+        self.silent = silent
 
     def generate_context_for_request(self, user_request: str, project_name: str) -> Optional[str]:
         """Generate context for a specific request"""
@@ -145,7 +146,8 @@ Load relevant context for: $ARGUMENTS
         with open(command_file, 'w') as f:
             f.write(header + content)
 
-        console.print(f"[green]✓ Saved command: /{command_name}[/green]")
+        if not self.silent:
+            console.print(f"[green]✓ Saved command: /{command_name}[/green]")
 
     def generate_all_commands(self, project_name: str):
         """Generate all useful slash commands for a project"""
@@ -160,7 +162,8 @@ Load relevant context for: $ARGUMENTS
         self._generate_quick_reference_command(project_name)
         self._generate_debug_helper_command(project_name)
 
-        console.print(f"[green]✓ Generated all commands for {project_name}[/green]")
+        if not self.silent:
+            console.print(f"[green]✓ Generated all commands for {project_name}[/green]")
 
     def _generate_best_practices_command(self, project_name: str):
         """Generate best practices command"""

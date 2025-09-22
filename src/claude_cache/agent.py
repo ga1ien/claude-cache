@@ -28,9 +28,9 @@ class CacheAgent:
         self.kb = kb if kb is not None else KnowledgeBase(db_path)
         self.processor = LogProcessor(self.kb)
         self.detector = EnhancedSuccessDetector()  # Using enhanced detector for better stack awareness
-        self.injector = ContextInjector(self.kb)
-        self.watcher = LogWatcher(self.processor)
-        self.realtime_updater = RealtimeContextUpdater(self.kb, self.injector)
+        self.injector = None  # Will be initialized based on mode
+        self.watcher = None  # Will be initialized based on mode
+        self.realtime_updater = None  # Will be initialized based on mode
         self.config_watcher = HotReloadWatcher()
 
         self.processor.detector = self.detector
@@ -56,13 +56,19 @@ class CacheAgent:
             self._check_first_run()
 
         if watch:
-            # For monitoring mode, do a quick silent check instead of full processing
+            # For monitoring mode, create watcher in silent mode
+            self.watcher = LogWatcher(self.processor, silent=True)
+            self.injector = ContextInjector(self.kb, silent=True)
+            self.realtime_updater = RealtimeContextUpdater(self.kb, self.injector, silent=True)
             self.processor.silent_mode = True
             self.watcher.process_existing_logs()
             console.print("[blue]Starting real-time monitoring...[/blue]")
             self.start_monitoring()
         else:
-            # Full processing for non-watch mode
+            # Full processing for non-watch mode - verbose
+            self.watcher = LogWatcher(self.processor, silent=False)
+            self.injector = ContextInjector(self.kb, silent=False)
+            self.realtime_updater = RealtimeContextUpdater(self.kb, self.injector)
             console.print("[blue]Processing existing logs...[/blue]")
             self.process_existing_logs()
 
