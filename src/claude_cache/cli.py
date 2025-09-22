@@ -12,14 +12,13 @@ from .daemon import CacheDaemon
 
 console = Console()
 
-ASCII_ART = """
- ██████╗██╗      █████╗ ██╗   ██╗██████╗ ███████╗     ██████╗ █████╗  ██████╗██╗  ██╗███████╗
-██╔════╝██║     ██╔══██╗██║   ██║██╔══██╗██╔════╝    ██╔════╝██╔══██╗██╔════╝██║  ██║██╔════╝
-██║     ██║     ███████║██║   ██║██║  ██║█████╗      ██║     ███████║██║     ███████║█████╗
-██║     ██║     ██╔══██║██║   ██║██║  ██║██╔══╝      ██║     ██╔══██║██║     ██╔══██║██╔══╝
-╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗    ╚██████╗██║  ██║╚██████╗██║  ██║███████╗
- ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝     ╚═════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝
-"""
+ASCII_ART = """                              claude
+ ██████╗ █████╗  ██████╗██╗  ██╗███████╗
+██╔════╝██╔══██╗██╔════╝██║  ██║██╔════╝
+██║     ███████║██║     ███████║█████╗
+██║     ██╔══██║██║     ██╔══██║██╔══╝
+╚██████╗██║  ██║╚██████╗██║  ██║███████╗
+ ╚═════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝"""
 
 
 @click.group()
@@ -398,6 +397,63 @@ def browse(url, project, db):
 
 
 @cli.command()
+@click.option('--context', '-c', help='Current work context for relevant suggestions')
+@click.option('--project', '-p', help='Project name (defaults to current directory)')
+@click.option('--db', type=click.Path(), help='Custom database path')
+def suggest(context, project, db):
+    """Get proactive recommendations based on current context"""
+    try:
+        agent = CacheAgent(db)
+
+        # Use current directory as project if not specified
+        if not project:
+            project = Path.cwd().name
+
+        # Get project patterns
+        patterns = agent.kb.get_project_patterns(project, limit=3)
+
+        # Search for context-relevant patterns if context provided
+        relevant = []
+        if context:
+            try:
+                if hasattr(agent.kb, 'vector_search') and agent.kb.vector_search:
+                    relevant = agent.kb.vector_search.search_patterns(context, limit=3)
+                else:
+                    # Fallback to basic pattern search
+                    all_patterns = agent.kb.search_patterns(context, limit=3)
+                    relevant = [{'content': p.get('approach', ''), 'similarity': 0.5} for p in all_patterns]
+            except Exception:
+                # Silent fallback if vector search fails
+                pass
+
+        console.print("💡 [bold]Suggestions for your current work:[/bold]\n")
+
+        if patterns:
+            console.print(f"[bold]Recent patterns from {project}:[/bold]")
+            for i, p in enumerate(patterns, 1):
+                approach = p.get('approach', 'No description')[:100]
+                console.print(f"{i}. {approach}...")
+            console.print()
+
+        if relevant:
+            console.print("[bold]Context-relevant patterns:[/bold]")
+            for i, r in enumerate(relevant, 1):
+                content = r.get('content', '')[:100]
+                similarity = r.get('similarity', 0)
+                console.print(f"{i}. {content}...")
+                console.print(f"   Relevance: {similarity:.2%}")
+            console.print()
+
+        if not patterns and not relevant:
+            console.print("[yellow]No suggestions available yet.[/yellow]")
+            console.print("Save patterns with [cyan]cache learn[/cyan] to build your knowledge base!")
+
+    except Exception as e:
+        console.print(f"[red]Error getting suggestions: {e}[/red]")
+        sys.exit(1)
+
+
+@cli.command()
 def info():
     """Show information about Claude Cache"""
     console.print(f"[bold cyan]{ASCII_ART}[/bold cyan]")
@@ -422,8 +478,9 @@ def info():
     console.print("[bold]CLI Quick Start:[/bold]")
     console.print("1. [cyan]cache learn[/cyan] \"Fixed CORS issue with middleware\" --tags cors,api")
     console.print("2. [cyan]cache query[/cyan] \"authentication problems\"")
-    console.print("3. [cyan]cache browse[/cyan] https://docs.example.com")
-    console.print("4. [cyan]cache stats[/cyan] to see your knowledge base\n")
+    console.print("3. [cyan]cache suggest[/cyan] --context \"working on API endpoints\"")
+    console.print("4. [cyan]cache browse[/cyan] https://docs.example.com")
+    console.print("5. [cyan]cache stats[/cyan] to see your knowledge base\n")
 
     console.print("[bold]Storage:[/bold]")
     console.print("All data stored locally in ~/.claude/knowledge/ - completely private\n")
