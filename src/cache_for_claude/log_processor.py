@@ -6,6 +6,9 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from rich.console import Console
 from .log_state import LogStateTracker
+from .error_pattern_learner import ErrorPatternLearner
+from .differential_learner import DifferentialLearner
+from .cross_project_intelligence import CrossProjectIntelligence
 
 console = Console()
 
@@ -94,6 +97,12 @@ class LogProcessor:
         self.state_tracker = LogStateTracker()
         self.processed_lines = {}  # Deprecated, using state_tracker now
 
+        # Initialize new intelligent systems
+        self.error_learner = ErrorPatternLearner(self.kb) if self.kb else None
+        self.differential_learner = DifferentialLearner(self.kb) if self.kb else None
+        self.cross_project_intel = CrossProjectIntelligence(self.kb) if self.kb else None
+        self.session_start_times = {}  # Track session timing
+
     def process_file(self, file_path: str):
         """Process a single JSONL log file with incremental processing"""
         if not Path(file_path).exists():
@@ -153,12 +162,21 @@ class LogProcessor:
         """Process a single log entry"""
         self.session_tracker.add_entry(entry)
 
+        # Track session timing for differential learning
+        project = entry.project_name
+        if project not in self.session_start_times:
+            self.session_start_times[project] = datetime.now()
+
         if entry.is_user_message():
             self.handle_user_request(entry)
         elif entry.is_tool_call():
             self.handle_tool_call(entry)
         elif entry.is_assistant_message():
             self.handle_assistant_response(entry)
+
+        # Check for errors and learn from them
+        if self.error_learner and 'error' in str(entry.content).lower():
+            self._process_error_pattern(entry)
 
     def handle_user_request(self, entry: LogEntry):
         """Extract and classify user intents"""
@@ -175,6 +193,14 @@ class LogProcessor:
 
         if self.kb:
             self.kb.store_request(request_data)
+
+        # Check for relevant global patterns
+        if self.cross_project_intel:
+            global_patterns = self.cross_project_intel.find_relevant_global_patterns(
+                entry.project_name, content
+            )
+            if global_patterns:
+                console.print(f"[cyan]Found {len(global_patterns)} relevant cross-project patterns[/cyan]")
 
     def handle_tool_call(self, entry: LogEntry):
         """Process tool usage patterns"""
@@ -219,6 +245,35 @@ class LogProcessor:
             return 'documentation'
         else:
             return 'other'
+
+    def _process_error_pattern(self, entry: LogEntry):
+        """Process potential error patterns"""
+        # Get recent entries for context
+        session = self.session_tracker.get_current_session(entry.project_name)
+        if session and 'entries' in session:
+            recent_entries = session['entries'][-10:]  # Last 10 entries
+
+            # Analyze for error patterns
+            patterns = self.error_learner.analyze_error_sequence(recent_entries)
+            for pattern in patterns:
+                self.error_learner.store_error_pattern(pattern)
+                console.print(f"[yellow]Learned from error: {pattern.error_type}[/yellow]")
+
+    def _track_pattern_efficiency(self, project: str, pattern_id: str, was_successful: bool):
+        """Track efficiency metrics for patterns"""
+        if not self.differential_learner or project not in self.session_start_times:
+            return
+
+        session_data = {
+            'start_time': self.session_start_times[project].isoformat(),
+            'end_time': datetime.now().isoformat(),
+            'pattern_id': pattern_id,
+            'successful': was_successful,
+            'entries': self.session_tracker.get_current_session(project).get('entries', [])
+        }
+
+        metrics = self.differential_learner.track_session_metrics(session_data)
+        console.print(f"[blue]Pattern efficiency: {metrics.time_to_solution.seconds}s[/blue]")
 
     def get_session_summary(self, project: str) -> Optional[Dict]:
         """Get a summary of the current session"""
