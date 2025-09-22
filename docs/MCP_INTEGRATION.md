@@ -13,13 +13,13 @@ Instead of:
 4. Pasting into Claude
 
 Now you just:
-- Type `/mcp__claude-cache__query` in Claude Code
+- Type `/mcp__cache__query` in Claude Code
 - Get instant results from your vector database
 - Claude uses patterns automatically!
 
 ## ⚡ Available Tools
 
-### `/mcp__claude-cache__query`
+### `/mcp__cache__query`
 **Instant Vector Search** - Search your patterns and documentation
 ```
 Arguments:
@@ -28,7 +28,7 @@ Arguments:
 - limit: Max results (default: 5)
 ```
 
-### `/mcp__claude-cache__learn`
+### `/mcp__cache__learn`
 **Save Success Patterns** - When something works, save it instantly
 ```
 Arguments:
@@ -37,7 +37,7 @@ Arguments:
 - code_snippet: The working code
 ```
 
-### `/mcp__claude-cache__suggest`
+### `/mcp__cache__suggest`
 **Proactive Suggestions** - Get relevant patterns based on current work
 ```
 Arguments:
@@ -45,14 +45,14 @@ Arguments:
 - intent: What you're trying to do
 ```
 
-### `/mcp__claude-cache__stats`
+### `/mcp__cache__stats`
 **Knowledge Base Stats** - See what you've learned
 ```
 Arguments:
 - project: (optional) Specific project stats
 ```
 
-### `/mcp__claude-cache__browse`
+### `/mcp__cache__browse`
 **Documentation Ingestion** - Index documentation and websites
 ```
 Arguments:
@@ -75,7 +75,7 @@ Add to your project's `.claude.json`:
 ```json
 {
   "mcpServers": {
-    "claude-cache": {
+    "cache": {
       "type": "stdio",
       "command": "cache-mcp-fast",
       "args": [],
@@ -89,7 +89,7 @@ Or globally in `~/.claude/claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "claude-cache": {
+    "cache": {
       "type": "stdio",
       "command": "cache-mcp-fast",
       "args": [],
@@ -121,7 +121,7 @@ When you say "Perfect!" or "That worked!", Claude Cache automatically saves the 
 
 ### Example 1: Finding Authentication Patterns
 ```
-You: /mcp__claude-cache__query authentication JWT
+You: /mcp__cache__query authentication JWT
 Claude Cache: Found 3 patterns:
 1. 🧠 JWT validation with refresh tokens (0.89)
 2. 📚 Authentication best practices doc (0.76)
@@ -131,7 +131,7 @@ Claude Cache: Found 3 patterns:
 ### Example 2: Saving What Works
 ```
 You: That JWT refresh implementation worked perfectly!
-You: /mcp__claude-cache__learn
+You: /mcp__cache__learn
      description: "JWT refresh token rotation"
      category: "authentication"
 Claude Cache: ✅ Pattern saved! Now searchable for future use.
@@ -139,7 +139,7 @@ Claude Cache: ✅ Pattern saved! Now searchable for future use.
 
 ### Example 3: Getting Proactive Help
 ```
-You: /mcp__claude-cache__suggest
+You: /mcp__cache__suggest
      context: "async function fetchUser(id) { ... }"
      intent: "add caching"
 Claude Cache: 💡 Found similar patterns:
@@ -185,7 +185,7 @@ cat .claude.json
 
 ## 🎯 Best Practices
 
-1. **Learn Often** - Use `/mcp__claude-cache__learn` when things work
+1. **Learn Often** - Use `/mcp__cache__learn` when things work
 2. **Query First** - Check patterns before implementing
 3. **Be Specific** - Better queries = better results
 4. **Use Categories** - Organize patterns by type
@@ -203,4 +203,4 @@ cat .claude.json
 
 **Claude Cache v0.6.1** - Making AI coding faster, smarter, and more intuitive!
 
-Need help? Check `/mcp__claude-cache__stats` to see your knowledge base status.
+Need help? Check `/mcp__cache__stats` to see your knowledge base status.

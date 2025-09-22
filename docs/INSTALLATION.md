@@ -106,7 +106,7 @@ pip install claude-cache[mcp]
    ```json
    {
      "mcpServers": {
-       "claude-cache": {
+       "cache": {
          "type": "stdio",
          "command": "cache-mcp-fast"
        }
@@ -118,7 +118,7 @@ pip install claude-cache[mcp]
    ```json
    {
      "mcpServers": {
-       "claude-cache": {
+       "cache": {
          "type": "stdio",
          "command": "cache-mcp-fast"
        }
@@ -130,7 +130,7 @@ pip install claude-cache[mcp]
 
 ### Available Tools
 
-#### `/mcp__claude-cache__query`
+#### `/mcp__cache__query`
 🔍 **Instant Vector Search**
 ```
 Arguments:
@@ -139,7 +139,7 @@ Arguments:
 - limit: max results (default: 5)
 ```
 
-#### `/mcp__claude-cache__learn`
+#### `/mcp__cache__learn`
 💾 **Save Success Patterns**
 ```
 Arguments:
@@ -148,7 +148,7 @@ Arguments:
 - code_snippet: (optional) working code
 ```
 
-#### `/mcp__claude-cache__suggest`
+#### `/mcp__cache__suggest`
 💡 **Proactive Recommendations**
 ```
 Arguments:
@@ -156,13 +156,13 @@ Arguments:
 - intent: what you're trying to accomplish
 ```
 
-#### `/mcp__claude-cache__stats`
+#### `/mcp__cache__stats`
 📊 **Knowledge Base Stats**
 ```
 Shows: pattern counts, search mode, project info
 ```
 
-#### `/mcp__claude-cache__browse`
+#### `/mcp__cache__browse`
 🌐 **Ingest Documentation**
 ```
 Arguments:
@@ -185,7 +185,7 @@ Arguments:
 **After (MCP Mode):**
 ```
 1. Code authentication
-2. Type: /mcp__claude-cache__query auth
+2. Type: /mcp__cache__query auth
 3. Get instant results in Claude
 4. Continue coding (no context switch!)
 ```
@@ -319,7 +319,7 @@ Use **MCP mode** with shared `.claude.json` configuration
 1. **Choose your mode** based on needs
 2. **Install** using the commands above
 3. **Configure** MCP if using Mode 3
-4. **Start learning patterns** with `cache start` or `/mcp__claude-cache__learn`
-5. **Query intelligence** with `cache query` or `/mcp__claude-cache__query`
+4. **Start learning patterns** with `cache start` or `/mcp__cache__learn`
+5. **Query intelligence** with `cache query` or `/mcp__cache__query`
 
 **Happy coding with Claude Cache!** 🚀

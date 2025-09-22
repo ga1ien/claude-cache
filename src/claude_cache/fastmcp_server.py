@@ -35,14 +35,14 @@ with contextlib.redirect_stdout(io.StringIO()):
         from .doc_scanner import DocumentationScanner
 
 # Initialize FastMCP server
-mcp = FastMCP("claude-cache")
+mcp = FastMCP("cache")
 
 # Initialize Claude Cache components in silent mode
 kb = KnowledgeBase(silent=True)
 agent = CacheAgent(kb=kb)
 
 @mcp.tool()
-async def cache_query(query: str, limit: int = 5) -> str:
+async def query(query: str, limit: int = 5) -> str:
     """
     Search your coding patterns and documentation using semantic vector search.
     Finds relevant solutions from past sessions.
@@ -101,7 +101,7 @@ async def cache_query(query: str, limit: int = 5) -> str:
         return f"❌ Error searching: {str(e)}"
 
 @mcp.tool()
-async def cache_learn(
+async def learn(
     solution: str,
     context: str = "",
     tags: str = "",
@@ -142,7 +142,7 @@ async def cache_learn(
         return f"❌ Error saving pattern: {str(e)}"
 
 @mcp.tool()
-async def cache_suggest(context: str = "", project_name: str = "default") -> str:
+async def suggest(context: str = "", project_name: str = "default") -> str:
     """
     Get proactive suggestions based on current context.
     Claude Cache analyzes what you're working on and suggests relevant patterns.
@@ -187,7 +187,7 @@ async def cache_suggest(context: str = "", project_name: str = "default") -> str
         return f"❌ Error getting suggestions: {str(e)}"
 
 @mcp.tool()
-async def cache_stats() -> str:
+async def stats() -> str:
     """
     View your Claude Cache knowledge base statistics.
     Shows pattern count, search capabilities, and indexed items.
@@ -229,7 +229,7 @@ async def cache_stats() -> str:
         return f"❌ Error getting statistics: {str(e)}"
 
 @mcp.tool()
-async def cache_browse(url: str, project_name: str = "default") -> str:
+async def browse(url: str, project_name: str = "default") -> str:
     """
     Index and learn from documentation or code repositories.
     Automatically extracts patterns and best practices.

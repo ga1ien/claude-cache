@@ -10,7 +10,7 @@ Never solve the same problem twice. Claude Cache remembers every successful solu
 
 ### 🚀 MCP Mode (Recommended)
 **Native Claude Code tools - the ultimate experience**
-- 5 native tools accessible via `/mcp__claude-cache__*`
+- 5 native tools accessible via `/mcp__cache__*`
 - Zero context switching
 - Instant pattern queries
 - Proactive suggestions
@@ -45,7 +45,7 @@ pip install claude-cache[mcp]
 ```json
 {
   "mcpServers": {
-    "claude-cache": {
+    "cache": {
       "type": "stdio",
       "command": "cache-mcp-fast"
     }
@@ -58,11 +58,11 @@ pip install claude-cache[mcp]
 **4. Test the tools:**
 ```
 Type "/" in Claude Code to see:
-/mcp__claude-cache__cache_query
-/mcp__claude-cache__cache_learn
-/mcp__claude-cache__cache_suggest
-/mcp__claude-cache__cache_stats
-/mcp__claude-cache__cache_browse
+/mcp__cache__query
+/mcp__cache__learn
+/mcp__cache__suggest
+/mcp__cache__stats
+/mcp__cache__browse
 ```
 
 ### ⚡ Enhanced Mode Installation (3 minutes)
@@ -91,7 +91,7 @@ cache start
 
 ```
 # In Claude Code, type:
-/mcp__claude-cache__cache_query authentication
+/mcp__cache__query authentication
 
 # Instant results:
 🔍 Found 3 results for 'authentication'
@@ -103,7 +103,7 @@ cache start
 
 **When something works:**
 ```
-/mcp__claude-cache__cache_learn
+/mcp__cache__learn
 description: "JWT login working perfectly"
 category: "authentication"
 
@@ -112,7 +112,7 @@ category: "authentication"
 
 **Get proactive suggestions:**
 ```
-/mcp__claude-cache__cache_suggest
+/mcp__cache__suggest
 context: "Setting up Express API routes"
 intent: "add authentication middleware"
 
@@ -157,14 +157,14 @@ cache browse https://docs.example.com
 ### 🚀 MCP Mode Verification
 ```
 # In Claude Code, type "/" and look for:
-/mcp__claude-cache__cache_query
-/mcp__claude-cache__cache_learn
-/mcp__claude-cache__cache_suggest
-/mcp__claude-cache__cache_stats
-/mcp__claude-cache__cache_browse
+/mcp__cache__query
+/mcp__cache__learn
+/mcp__cache__suggest
+/mcp__cache__stats
+/mcp__cache__browse
 
 # Test with:
-/mcp__claude-cache__cache_stats
+/mcp__cache__stats
 # Should show your knowledge base info
 ```
 
@@ -213,7 +213,7 @@ cache stats
 
 **Learning Patterns:**
 - **Basic/Enhanced**: Automatic via log monitoring + manual CLI
-- **MCP**: Automatic + instant `/mcp__claude-cache__learn` tool
+- **MCP**: Automatic + instant `/mcp__cache__learn` tool
 
 ---
 
@@ -242,7 +242,7 @@ your-project/
 **Learning Patterns:**
 ```
 # When something works perfectly:
-/mcp__claude-cache__cache_learn
+/mcp__cache__learn
 description: "JWT refresh token rotation working"
 category: "authentication"
 code_snippet: "// Your working code here"
@@ -251,7 +251,7 @@ code_snippet: "// Your working code here"
 **Getting Suggestions:**
 ```
 # Before starting work:
-/mcp__claude-cache__cache_suggest
+/mcp__cache__suggest
 context: "Building user dashboard"
 intent: "add real-time updates"
 ```
@@ -259,8 +259,8 @@ intent: "add real-time updates"
 **Quick Queries:**
 ```
 # Find relevant patterns instantly:
-/mcp__claude-cache__cache_query database performance
-/mcp__claude-cache__cache_query React hooks
+/mcp__cache__query database performance
+/mcp__cache__query React hooks
 ```
 
 ### ⚡ Enhanced & 🔧 Basic Mode Best Practices
@@ -293,7 +293,7 @@ cache browse https://docs.example.com/api
 You: "I need to add authentication"
 
 # Instead of guessing, search first:
-You: "/mcp__claude-cache__cache_query authentication"
+You: "/mcp__cache__query authentication"
 Claude: "🔍 Found JWT pattern from my-api project..."
 
 # Use the suggested approach
@@ -301,7 +301,7 @@ You: "Implement that JWT pattern"
 Claude: *implements based on your successful pattern*
 
 # When it works:
-You: "/mcp__claude-cache__cache_learn JWT auth working in new project"
+You: "/mcp__cache__learn JWT auth working in new project"
 Claude: "✅ Pattern saved for future use!"
 ```
 
@@ -412,7 +412,7 @@ cache stats
 cache stats --project "my-app"
 
 # MCP Mode
-/mcp__claude-cache__stats
+/mcp__cache__stats
 # Shows current project info automatically
 ```
 
@@ -422,11 +422,11 @@ cache stats --project "my-app"
 
 ### MCP Mode Commands (In Claude Code)
 ```
-/mcp__claude-cache__query [query] [project] [limit]
-/mcp__claude-cache__learn [description] [category] [code_snippet]
-/mcp__claude-cache__suggest [context] [intent] [limit]
-/mcp__claude-cache__stats [project] [detailed]
-/mcp__claude-cache__browse [url] [project] [doc_type]
+/mcp__cache__query [query] [project] [limit]
+/mcp__cache__learn [description] [category] [code_snippet]
+/mcp__cache__suggest [context] [intent] [limit]
+/mcp__cache__stats [project] [detailed]
+/mcp__cache__browse [url] [project] [doc_type]
 ```
 
 ### CLI Commands (Enhanced/Basic)
@@ -447,8 +447,8 @@ tmux attach -t cache # Reattach session
 ## ❓ How Do I Know It's Working?
 
 ### 🚀 MCP Mode Signs
-1. Type "/" in Claude Code - see mcp__claude-cache tools
-2. `/mcp__claude-cache__stats` shows your data
+1. Type "/" in Claude Code - see mcp__cache tools
+2. `/mcp__cache__stats` shows your data
 3. Tools respond instantly with results
 
 ### ⚡ Enhanced Mode Signs
@@ -509,7 +509,7 @@ tmux attach -t cache # Reattach session
 - [ ] Added .claude.json configuration
 - [ ] Restarted Claude Code
 - [ ] See tools when typing "/" in Claude Code
-- [ ] `/mcp__claude-cache__stats` works
+- [ ] `/mcp__cache__stats` works
 
 ### ⚡ Enhanced Mode
 - [ ] Installed: `pip install claude-cache[enhanced]`
@@ -552,7 +552,7 @@ tmux attach -t cache # Reattach session
 ### 🚀 MCP Mode Experience
 1. **Type "/" in Claude Code** → Instant access to all patterns
 2. **Ask for help** → Claude proactively suggests relevant patterns
-3. **Success happens** → Save with `/mcp__claude-cache__learn`
+3. **Success happens** → Save with `/mcp__cache__learn`
 4. **Zero friction** → Everything happens in Claude Code
 
 ### ⚡ Enhanced Mode Experience

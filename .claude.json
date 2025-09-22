@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "claude-cache": {
+    "cache": {
       "type": "stdio",
-      "command": "cache-mcp",
+      "command": "cache-mcp-fast",
       "args": [],
       "env": {}
     }

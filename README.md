@@ -40,7 +40,7 @@ pip install "claude-cache[mcp]"
 ```json
 {
   "mcpServers": {
-    "claude-cache": {
+    "cache": {
       "type": "stdio",
       "command": "cache-mcp-fast"
     }
@@ -54,38 +54,38 @@ pip install "claude-cache[mcp]"
 
 ## 🎯 Native Claude Code Tools
 
-### `/mcp__claude-cache__cache_query`
+### `/mcp__cache__query`
 Search your entire knowledge base instantly
 ```
-Example: /mcp__claude-cache__cache_query "authentication JWT"
+Example: /mcp__cache__query "authentication JWT"
 Returns: Your previous JWT implementations with context
 ```
 
-### `/mcp__claude-cache__cache_learn`
+### `/mcp__cache__learn`
 Save successful solutions for future use
 ```
-Example: /mcp__claude-cache__cache_learn
+Example: /mcp__cache__learn
   solution: "Fixed CORS with proxy middleware"
   tags: "cors,api,middleware"
 ```
 
-### `/mcp__claude-cache__cache_suggest`
+### `/mcp__cache__suggest`
 Get proactive recommendations based on current context
 ```
-Example: /mcp__claude-cache__cache_suggest "working on API endpoints"
+Example: /mcp__cache__suggest "working on API endpoints"
 Returns: Relevant patterns from your knowledge base
 ```
 
-### `/mcp__claude-cache__cache_stats`
+### `/mcp__cache__stats`
 Monitor your growing knowledge base
 ```
 Shows: Total patterns, projects, search capabilities
 ```
 
-### `/mcp__claude-cache__cache_browse`
+### `/mcp__cache__browse`
 Index documentation for instant access
 ```
-Example: /mcp__claude-cache__cache_browse "https://docs.example.com"
+Example: /mcp__cache__browse "https://docs.example.com"
 Result: Documentation indexed and searchable
 ```
 
@@ -113,7 +113,7 @@ Claude Cache creates an intelligent layer between you and your AI assistant:
 # Save the solution automatically when it works
 
 # Friday: Hit the same issue
-/mcp__claude-cache__cache_query "JWT refresh failing"
+/mcp__cache__query "JWT refresh failing"
 # → Instantly get your exact solution with context
 ```
 
@@ -123,17 +123,17 @@ Claude Cache creates an intelligent layer between you and your AI assistant:
 # Claude Cache automatically captures the pattern
 
 # Project B: Need rate limiting
-/mcp__claude-cache__cache_suggest "API middleware"
+/mcp__cache__suggest "API middleware"
 # → Get your rate limiter pattern with implementation details
 ```
 
 ### Example 3: Team Knowledge Sharing
 ```python
 # Senior dev solves complex database optimization
-/mcp__claude-cache__cache_learn "Optimized query with indexes"
+/mcp__cache__learn "Optimized query with indexes"
 
 # Junior dev hits performance issue
-/mcp__claude-cache__cache_query "slow database query"
+/mcp__cache__query "slow database query"
 # → Finds senior dev's solution with explanation
 ```
 

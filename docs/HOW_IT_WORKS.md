@@ -48,7 +48,7 @@ Claude Cache transforms every coding session into permanent knowledge. It's like
 ┌─────────────────────────────────────────────────┐
 │                  Claude Code                     │
 │  ┌───────────────────────────────────────────┐  │
-│  │         MCP Tools (/mcp__claude-cache__)  │  │
+│  │         MCP Tools (/mcp__cache__)          │  │
 │  └────────────────┬──────────────────────────┘  │
 └───────────────────┼──────────────────────────────┘
                     │
@@ -118,7 +118,7 @@ Then add to `.claude.json`:
 ```json
 {
   "mcpServers": {
-    "claude-cache": {
+    "cache": {
       "type": "stdio",
       "command": "cache-mcp-fast"
     }
@@ -140,7 +140,7 @@ pip install "claude-cache[mcp]"
 # 2. Configure Claude Code (create .claude.json)
 echo '{
   "mcpServers": {
-    "claude-cache": {
+    "cache": {
       "type": "stdio",
       "command": "cache-mcp-fast"
     }
@@ -151,8 +151,8 @@ echo '{
 
 # 4. Verify tools are available
 # Type "/" in Claude Code - should see:
-# /mcp__claude-cache__cache_query
-# /mcp__claude-cache__cache_learn
+# /mcp__cache__query
+# /mcp__cache__learn
 # etc.
 ```
 
@@ -221,7 +221,7 @@ Compares solution efficiency:
 
 #### Via MCP Tools (Best)
 ```
-/mcp__claude-cache__cache_learn
+/mcp__cache__learn
 solution: "Implemented JWT refresh with rotation"
 context: "Next.js 14 with App Router"
 tags: "auth,jwt,nextjs"
@@ -294,7 +294,7 @@ else:
 
 ## MCP Tools Deep Dive
 
-### `/mcp__claude-cache__cache_query`
+### `/mcp__cache__query`
 
 **Purpose**: Instant pattern search with semantic understanding
 
@@ -305,15 +305,15 @@ else:
 **Advanced Usage**:
 ```
 # Simple query
-/mcp__claude-cache__cache_query "authentication"
+/mcp__cache__query "authentication"
 
 # With limit
-/mcp__claude-cache__cache_query
+/mcp__cache__query
 query: "database optimization"
 limit: 10
 
 # Complex semantic query
-/mcp__claude-cache__cache_query "slow API response times"
+/mcp__cache__query "slow API response times"
 # Finds: caching, query optimization, connection pooling
 ```
 
@@ -324,7 +324,7 @@ limit: 10
 - Timestamp
 - Related patterns
 
-### `/mcp__claude-cache__cache_learn`
+### `/mcp__cache__learn`
 
 **Purpose**: Save successful solutions permanently
 
@@ -337,19 +337,19 @@ limit: 10
 **Strategic Usage**:
 ```
 # After fixing a bug
-/mcp__claude-cache__cache_learn
+/mcp__cache__learn
 solution: "Fixed CORS by adding proxy middleware"
 context: "Next.js API routes with external API"
 tags: "cors,api,middleware,nextjs"
 
 # After optimizing performance
-/mcp__claude-cache__cache_learn
+/mcp__cache__learn
 solution: "Reduced load time with React.lazy"
 context: "Large component tree causing slow initial load"
 tags: "performance,react,lazy-loading"
 ```
 
-### `/mcp__claude-cache__cache_suggest`
+### `/mcp__cache__suggest`
 
 **Purpose**: Proactive pattern recommendations
 
@@ -359,17 +359,17 @@ tags: "performance,react,lazy-loading"
 **Power User Tips**:
 ```
 # Before starting work
-/mcp__claude-cache__cache_suggest
+/mcp__cache__suggest
 context: "Building user dashboard with real-time updates"
 # Returns: WebSocket patterns, state management, polling strategies
 
 # When stuck
-/mcp__claude-cache__cache_suggest
+/mcp__cache__suggest
 context: "TypeError: Cannot read property 'map' of undefined"
 # Returns: Null checking patterns, optional chaining, defensive coding
 ```
 
-### `/mcp__claude-cache__cache_stats`
+### `/mcp__cache__stats`
 
 **Purpose**: Knowledge base analytics
 
@@ -382,13 +382,13 @@ context: "TypeError: Cannot read property 'map' of undefined"
 
 **Using Stats Strategically**:
 ```
-/mcp__claude-cache__cache_stats
+/mcp__cache__stats
 # Check if you have patterns for current work
 # See which projects have most knowledge
 # Identify knowledge gaps
 ```
 
-### `/mcp__claude-cache__cache_browse`
+### `/mcp__cache__browse`
 
 **Purpose**: Index documentation instantly
 
@@ -399,16 +399,16 @@ context: "TypeError: Cannot read property 'map' of undefined"
 **Documentation Mining**:
 ```
 # Index API docs
-/mcp__claude-cache__cache_browse
+/mcp__cache__browse
 url: "https://docs.stripe.com/api"
 project_name: "payment-system"
 
 # Index team knowledge
-/mcp__claude-cache__cache_browse
+/mcp__cache__browse
 url: "https://wiki.company.com/engineering"
 
 # Index GitHub README
-/mcp__claude-cache__cache_browse
+/mcp__cache__browse
 url: "https://github.com/facebook/react/blob/main/README.md"
 ```
 
@@ -537,11 +537,11 @@ Good: "React useEffect cleanup memory leak"
 Bad: "React problem"
 
 # Combine with context
-/mcp__claude-cache__cache_suggest
+/mcp__cache__suggest
 context: "const [data, setData] = useState();"
 
 # Tag strategically
-/mcp__claude-cache__cache_learn
+/mcp__cache__learn
 tags: "react,hooks,state,typescript"
 ```
 
@@ -579,18 +579,18 @@ git commit -m "Share team patterns"
 
 ```python
 # Use previous patterns to build complex solutions
-1. /mcp__claude-cache__cache_query "API setup"
+1. /mcp__cache__query "API setup"
 2. Use API pattern as base
-3. /mcp__claude-cache__cache_query "authentication middleware"
+3. /mcp__cache__query "authentication middleware"
 4. Combine patterns
-5. /mcp__claude-cache__cache_learn "Complete authenticated API"
+5. /mcp__cache__learn "Complete authenticated API"
 ```
 
 ### Context Injection
 
 ```python
 # Pre-load relevant patterns
-/mcp__claude-cache__cache_query "testing strategies"
+/mcp__cache__query "testing strategies"
 # Now Claude has testing context for your session
 
 # Build on loaded context
@@ -612,7 +612,7 @@ cache learn "Zustand for simple state" --metric "time:15min"
 
 ```python
 # Find transferable patterns
-/mcp__claude-cache__cache_query "authentication"
+/mcp__cache__query "authentication"
 # Returns patterns from ALL projects
 
 # Apply to current project
@@ -693,7 +693,7 @@ du -h ~/.claude/knowledge/cache.db
 cache optimize
 
 # 3. Limit search results
-/mcp__claude-cache__cache_query
+/mcp__cache__query
 query: "pattern"
 limit: 3
 
@@ -708,13 +708,13 @@ cache start
 
 ### Daily Workflow
 - [ ] Start Claude Cache when you begin coding
-- [ ] Use `/mcp__claude-cache__cache_suggest` before implementing features
-- [ ] Save successful patterns immediately with `/mcp__claude-cache__cache_learn`
+- [ ] Use `/mcp__cache__suggest` before implementing features
+- [ ] Save successful patterns immediately with `/mcp__cache__learn`
 - [ ] Query before solving problems you might have seen before
 
 ### Weekly Maintenance
-- [ ] Review stats with `/mcp__claude-cache__cache_stats`
-- [ ] Index new documentation with `/mcp__claude-cache__cache_browse`
+- [ ] Review stats with `/mcp__cache__stats`
+- [ ] Index new documentation with `/mcp__cache__browse`
 - [ ] Export important patterns for backup
 - [ ] Clean up duplicate patterns
 
@@ -776,26 +776,26 @@ cache query "common errors" --inject
 ### Before Starting a Feature
 ```
 # 1. Search existing patterns
-/mcp__claude-cache__cache_query "similar feature"
+/mcp__cache__query "similar feature"
 
 # 2. Get suggestions
-/mcp__claude-cache__cache_suggest
+/mcp__cache__suggest
 context: "building user authentication"
 
 # 3. Learn from other projects
-/mcp__claude-cache__cache_query "auth"
+/mcp__cache__query "auth"
 # Shows patterns from all projects
 ```
 
 ### After Solving a Problem
 ```
 # 1. Immediate capture
-/mcp__claude-cache__cache_learn
+/mcp__cache__learn
 solution: "Fixed race condition with useEffect cleanup"
 tags: "react,hooks,async"
 
 # 2. Document warnings
-/mcp__claude-cache__cache_learn
+/mcp__cache__learn
 solution: "Always cleanup async operations in useEffect"
 context: "Prevents memory leaks and state updates on unmounted components"
 ```
@@ -826,7 +826,7 @@ Claude Cache transforms how you work with AI coding assistants by providing:
 
 The more you use Claude Cache, the more valuable it becomes. Every problem solved is a future problem prevented.
 
-**Start small**: Use `/mcp__claude-cache__cache_query` for one day
+**Start small**: Use `/mcp__cache__query` for one day
 **See the value**: Watch how often you find useful patterns
 **Go deeper**: Add learning, suggestions, and browsing
 **Master it**: Optimize your workflow with advanced patterns
