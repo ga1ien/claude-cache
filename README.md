@@ -78,7 +78,7 @@ Result: Documentation indexed and searchable
 
 ## Quick Setup
 
-### Installation
+### 1. Installation
 ```bash
 # Complete setup with MCP integration (Recommended)
 pip install "claude-cache[mcp]"
@@ -90,7 +90,19 @@ pip install "claude-cache[enhanced]"
 pip install claude-cache
 ```
 
-### Claude Code Integration
+### 2. Start Background Learning
+```bash
+# Recommended: Simple background process
+cache background
+
+# Alternative: Full system
+cache run
+
+# One-time: Process existing logs
+cache process
+```
+
+### 3. Claude Code Integration (Optional)
 Add to your `.claude.json`:
 ```json
 {
@@ -103,7 +115,24 @@ Add to your `.claude.json`:
 }
 ```
 
+Start MCP server separately:
+```bash
+cache-mcp
+```
+
 Restart Claude Code and type `/` to see your new tools!
+
+### 4. Test It's Working
+```bash
+# Check status
+cache stats
+
+# Search existing patterns
+cache query "authentication"
+
+# Get suggestions
+cache suggest --context "working on APIs"
+```
 
 ## How It Works
 
@@ -159,26 +188,79 @@ Claude Cache creates an intelligent layer between you and your AI:
 - **Storage**: Efficient SQLite with optional vector embeddings
 - **Privacy**: Zero external API calls, completely local
 
-## CLI Usage
+## Terminal Usage
 
-For terminal power users:
+Claude Cache offers multiple ways to run in terminal:
 
+### **🚀 Quick Start (Recommended)**
 ```bash
-# Start monitoring (runs in background)
-cache start
-
-# Manual pattern save
-cache learn "Solution description" --tags "tag1,tag2"
+# Start background learning system
+cache background
 
 # Search patterns
-cache query "search term"
+cache query "authentication patterns"
 
-# Index documentation
-cache browse https://docs.example.com
+# Get suggestions
+cache suggest --context "working on APIs"
 
 # View statistics
 cache stats
 ```
+
+### **⚙️ Advanced Options**
+```bash
+# Full system with terminal interface
+cache run
+
+# Process existing logs only (one-time)
+cache process
+
+# Foreground mode (for testing)
+cache start --watch
+
+# Include MCP server
+cache run --with-mcp
+```
+
+### **🔄 Background Process Methods**
+```bash
+# Using nohup (survives terminal closure)
+nohup cache start --watch > cache.log 2>&1 &
+
+# Using screen (detachable sessions)
+screen -S claude-cache -d -m cache start --watch
+
+# Using tmux (session management)
+tmux new-session -d -s claude-cache 'cache start --watch'
+```
+
+### **💾 Manual Learning**
+```bash
+# Save successful solutions
+cache learn "JWT middleware with validation" --tags "auth,jwt,security"
+
+# Index documentation
+cache browse https://docs.example.com
+cache scan-docs .  # Scan current repository
+
+# Export/import knowledge
+cache export backup.json
+cache import backup.json
+```
+
+### **🛠️ Process Control**
+```bash
+# Check what's running
+ps aux | grep cache
+
+# Stop background processes
+pkill -f 'cache start'
+
+# View logs
+tail -f /tmp/claude-cache.log
+```
+
+**📚 Complete guide**: See [docs/TERMINAL_SETUP.md](docs/TERMINAL_SETUP.md) for detailed setup options.
 
 ## Architecture
 

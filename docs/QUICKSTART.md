@@ -41,7 +41,21 @@ Never solve the same problem twice. Claude Cache remembers every successful solu
 pip install claude-cache[mcp]
 ```
 
-**2. Configure Claude Code** - Add to your project's `.claude.json`:
+**2. Start Background Learning:**
+```bash
+# Recommended: Simple background process
+cache background
+
+# Alternative: Full system with enhanced features
+cache run
+```
+
+**3. Start MCP Server (for Claude Code):**
+```bash
+cache-mcp
+```
+
+**4. Configure Claude Code** - Add to your project's `.claude.json`:
 ```json
 {
   "mcpServers": {
@@ -53,9 +67,9 @@ pip install claude-cache[mcp]
 }
 ```
 
-**3. Restart Claude Code**
+**5. Restart Claude Code**
 
-**4. Test the tools:**
+**6. Test the tools:**
 ```
 Type "/" in Claude Code to see:
 /mcp__cache__query
@@ -65,20 +79,35 @@ Type "/" in Claude Code to see:
 /mcp__cache__browse
 ```
 
+**7. Verify Everything is Working:**
+```bash
+# Check background learning status
+cache stats
+
+# Test terminal interface
+cache query "test patterns"
+```
+
 ### ⚡ Enhanced Mode Installation (3 minutes)
 ```bash
 pip install claude-cache[enhanced]
 
-# Start monitoring
-cache start
+# Start background learning
+cache background
+
+# Or with full features
+cache run
 ```
 
 ### 🔧 Basic Mode Installation (2 minutes)
 ```bash
 pip install claude-cache
 
-# Start monitoring
-cache start
+# Start background learning
+cache background
+
+# Or foreground mode
+cache start --watch
 ```
 
 ---

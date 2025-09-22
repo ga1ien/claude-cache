@@ -92,20 +92,32 @@ Claude Cache transforms every coding session into permanent knowledge. It's like
 #### 🔧 Basic Mode - Simple & Reliable
 ```bash
 pip install claude-cache
-cache start  # Begin monitoring
+
+# Start background learning
+cache background
+
+# Or foreground monitoring
+cache start --watch
 ```
 - TF-IDF keyword search
 - All CLI commands
+- Background process options
 - Pattern learning
 - Works everywhere
 
 #### ⚡ Enhanced Mode - Semantic Intelligence
 ```bash
 pip install "claude-cache[enhanced]"
-cache start
+
+# Start with full system
+cache run
+
+# Or background only
+cache background
 ```
 - Everything in Basic +
 - Semantic vector search (2x better accuracy)
+- Enhanced pattern intelligence
 - Context understanding
 - ML-powered suggestions
 
@@ -418,17 +430,58 @@ url: "https://github.com/facebook/react/blob/main/README.md"
 
 ### Background Monitoring
 
+#### 🚀 Recommended: Simple Background Process
 ```bash
-# Start in foreground (see live activity)
-cache start
+# Best for most users
+cache background
 
-# Start in background with tmux
-tmux new -s cache -d "cache start"
+# Check if running
+ps aux | grep cache
+
+# View logs
+tail -f /tmp/claude-cache.log
+
+# Stop
+pkill -f 'cache start'
+```
+
+#### ⚙️ Enhanced: Full System
+```bash
+# Background learning + terminal interface
+cache run
+
+# Background with MCP server
+cache run --with-mcp
+
+# Foreground mode
+cache run --foreground
+```
+
+#### 🔄 Advanced: Session Management
+```bash
+# Using tmux (recommended for power users)
+tmux new -s cache -d "cache start --watch"
 tmux attach -t cache  # View logs
+tmux detach  # Ctrl+B, then D
 
-# Start with systemd (Linux)
-sudo systemctl enable claude-cache
-sudo systemctl start claude-cache
+# Using screen
+screen -S cache -d -m cache start --watch
+screen -r cache  # Reattach
+
+# Using nohup (simple background)
+nohup cache start --watch > cache.log 2>&1 &
+```
+
+#### 🏃 One-Time Processing
+```bash
+# Process existing logs only (no monitoring)
+cache process
+
+# Check what was learned
+cache stats
+```
+
+**📚 Complete setup guide**: See [docs/TERMINAL_SETUP.md](TERMINAL_SETUP.md) for all options.
 ```
 
 ### Advanced Queries
@@ -763,8 +816,11 @@ cache start
 
 ### Morning Routine
 ```bash
-# 1. Start monitoring
-tmux new -s cache -d "cache start"
+# 1. Start background learning
+cache background
+
+# Or start with tmux for monitoring
+tmux new -s cache -d "cache start --watch"
 
 # 2. Check yesterday's patterns
 cache stats --recent

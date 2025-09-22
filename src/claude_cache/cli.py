@@ -24,7 +24,11 @@ ASCII_ART = """                              claude
 @click.group()
 @click.version_option(version=__version__, prog_name="cache")
 def cli():
-    """Claude Cache - Give your AI coding assistant perfect recall"""
+    """Claude Cache - Give your AI coding assistant perfect recall
+
+    Quick Start: cache run  (starts background learning + terminal interface)
+    For Claude Code: cache-mcp  (run separately for MCP integration)
+    """
     pass
 
 
@@ -203,6 +207,150 @@ def daemon(action):
         d.restart()
     elif action == 'status':
         d.status()
+
+
+@cli.command()
+@click.option('--foreground', '-f', is_flag=True, help='Run in foreground instead of background')
+@click.option('--with-mcp', is_flag=True, help='Also start MCP server (usually not needed)')
+@click.option('--db', type=click.Path(), help='Custom database path')
+def run(foreground, with_mcp, db):
+    """Start Claude Cache: background learning + vector search + terminal interface"""
+    import subprocess
+    import time
+
+    console.print(f"[bold cyan]{ASCII_ART}[/bold cyan]")
+    console.print(f"[bold]Starting Claude Cache v{__version__} - Terminal & Learning System[/bold]\n")
+
+    processes = []
+
+    try:
+        # Start background learning agent directly (no daemon)
+        console.print("🔄 [cyan]Starting background learning system...[/cyan]")
+        agent = CacheAgent(db)
+
+        if foreground:
+            # Start agent in foreground
+            console.print("✅ [green]Background learning active[/green]")
+            console.print("\n[dim]Running in foreground mode. Press Ctrl+C to stop.[/dim]")
+            agent.start(watch=True)
+        else:
+            # Start agent as background subprocess
+            import subprocess
+            import sys
+
+            # Start the agent using cache start command in background
+            subprocess.Popen([
+                sys.executable, '-c',
+                f'from claude_cache.agent import CacheAgent; '
+                f'agent = CacheAgent("{db}" if "{db}" != "None" else None); '
+                f'agent.start(watch=True)'
+            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+            console.print("✅ [green]Background learning started[/green]")
+            time.sleep(1)  # Give agent time to start
+
+        # Start MCP server only if explicitly requested
+        if with_mcp:
+            console.print("🔗 [cyan]Starting MCP server for Claude Code integration...[/cyan]")
+            if foreground:
+                console.print("⚠️  [yellow]Cannot run MCP server in foreground mode[/yellow]")
+                console.print("    Run 'cache-mcp' separately for Claude Code integration")
+            else:
+                # Start MCP server as subprocess
+                mcp_process = subprocess.Popen(
+                    ['cache-mcp'],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE
+                )
+                processes.append(('cache-mcp', mcp_process))
+                console.print("✅ [green]MCP server started[/green]")
+
+        if not foreground:
+            console.print("\n🎉 [bold green]Claude Cache is now running![/bold green]")
+            console.print("\n[bold]What's running:[/bold]")
+            console.print("  • 🧠 Background learning agent (monitors Claude Code every 30s)")
+            console.print("  • 🔍 Vector search and pattern intelligence")
+            console.print("  • 💻 Full terminal interface available")
+
+            console.print("\n[bold]Try these terminal commands:[/bold]")
+            console.print("  • [cyan]cache query \"authentication patterns\"[/cyan]")
+            console.print("  • [cyan]cache stats[/cyan]")
+            console.print("  • [cyan]cache suggest --context \"working on API\"[/cyan]")
+            console.print("  • [cyan]cache learn \"solution here\" --tags auth,api[/cyan]")
+
+            if not with_mcp:
+                console.print("\n[bold]For Claude Code integration:[/bold]")
+                console.print("  • Run [cyan]cache-mcp[/cyan] separately")
+                console.print("  • Or use [cyan]cache run --with-mcp[/cyan]")
+
+            console.print("\n[bold]Stop with:[/bold]")
+            console.print("  • [cyan]pkill -f 'CacheAgent'[/cyan]")
+            if with_mcp:
+                console.print("  • [cyan]pkill cache-mcp[/cyan]")
+
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Stopping Claude Cache...[/yellow]")
+        for name, process in processes:
+            try:
+                process.terminate()
+                console.print(f"✅ Stopped {name}")
+            except:
+                pass
+        sys.exit(0)
+    except Exception as e:
+        console.print(f"[red]Error starting Claude Cache: {e}[/red]")
+        sys.exit(1)
+
+
+@cli.command()
+@click.option('--db', type=click.Path(), help='Custom database path')
+def background(db):
+    """Start Claude Cache in background using simple subprocess (no daemon)"""
+    import subprocess
+    import sys
+
+    console.print(f"[bold cyan]{ASCII_ART}[/bold cyan]")
+    console.print(f"[bold]Starting Claude Cache v{__version__} in Background[/bold]\n")
+
+    console.print("🔄 [cyan]Starting background process...[/cyan]")
+
+    # Use nohup approach for background execution
+    cmd = [
+        'nohup', 'cache', 'start', '--watch'
+    ]
+
+    if db:
+        cmd.extend(['--db', db])
+
+    try:
+        # Start in background, redirect output to log file
+        subprocess.Popen(
+            cmd + ['>', '/tmp/claude-cache.log', '2>&1', '&'],
+            shell=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+
+        console.print("✅ [green]Background process started![/green]")
+        console.print("\n[bold]Claude Cache is now running in background![/bold]")
+        console.print("\n[bold]What's running:[/bold]")
+        console.print("  • 🧠 Background learning (monitors Claude Code)")
+        console.print("  • 🔍 Vector search and pattern intelligence")
+        console.print("  • 💻 Terminal commands available")
+
+        console.print("\n[bold]Try these commands:[/bold]")
+        console.print("  • [cyan]cache query \"patterns\"[/cyan]")
+        console.print("  • [cyan]cache stats[/cyan]")
+        console.print("  • [cyan]cache suggest[/cyan]")
+
+        console.print("\n[bold]Stop with:[/bold]")
+        console.print("  • [cyan]pkill -f 'cache start'[/cyan]")
+        console.print("\n[bold]View logs:[/bold]")
+        console.print("  • [cyan]tail -f /tmp/claude-cache.log[/cyan]")
+
+    except Exception as e:
+        console.print(f"[red]Error starting background process: {e}[/red]")
+        sys.exit(1)
 
 
 @cli.command()
