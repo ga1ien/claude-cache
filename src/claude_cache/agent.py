@@ -1,6 +1,7 @@
 """Main agent that coordinates all components"""
 
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any
 from rich.console import Console
