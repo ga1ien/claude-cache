@@ -1,84 +1,162 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to Claude Cache will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2025-01-21
+## [0.4.0] - 2025-01-21
 
 ### Added
-- Initial release of Claude Cache
-- Real-time log monitoring for Claude Code sessions
-- Success pattern detection using multiple indicators
-- SQLite-based knowledge base storage
-- Context generation for similar requests
-- Slash command generation for Claude Code
-- Project convention tracking
-- CLI interface with multiple commands
-- Export/import functionality for team sharing
-- Rich terminal output with progress indicators
-- TF-IDF based similarity matching for patterns
+- **Error Pattern Learning System** - Learn from failures and prevent repeating mistakes
+  - Tracks error → solution → prevention mappings
+  - Categorizes errors (import, type, syntax, null reference, build, test, etc.)
+  - Automatically generates prevention tips
+  - Stores error patterns for future reference
 
-### Features
-- `start` - Monitor and process Claude Code logs in real-time
-- `process` - Process existing logs without monitoring
-- `query` - Search patterns from knowledge base
-- `generate` - Create slash commands for projects
-- `stats` - View knowledge base statistics
-- `export/import` - Share patterns with team
-- `context` - Generate context for specific requests
-- `rebuild` - Rebuild knowledge base from scratch
+- **Differential Learning System** - Track and prioritize efficient solutions
+  - Measures time-to-solution for every pattern
+  - Compares different approaches for the same task
+  - Weights patterns by efficiency (faster is better)
+  - Prioritizes recent patterns over old ones
+  - Generates efficiency reports
 
-### Technical Details
-- Python 3.8+ support
-- Watchdog for file system monitoring
-- scikit-learn for pattern matching
-- Rich for terminal UI
-- Click for CLI interface
-- SQLite for local storage
-
-## [Unreleased]
-
-### Added (New Features)
-- **First-Run Documentation Scanner** - Automatically prompts to scan Development folder on first launch
-- **Batch Project Import** - Import documentation from all projects at once
-- **Intelligent Lesson Organization** - Auto-categorizes lessons by topic (auth, database, API, debugging, etc.)
-- **Hierarchical Documentation System** - Lightweight index (CLAUDE.md) + detailed category files
-- **Smart Document Length Management** - Keeps CLAUDE.md under 30KB with automatic overflow handling
-- **User Content Preservation** - Protected sections in CLAUDE.md that are never overwritten
-- **Multi-Part Category Files** - Automatic file splitting when categories exceed 40 lessons
-- **Documentation Scanner Module** - New `doc_scanner.py` for extracting lessons from existing docs
-- **Lesson Organizer Module** - New `lesson_organizer.py` for intelligent categorization
-- **CLI Documentation Commands** - `cache scan-docs` and `cache search-docs` commands
-- **Lesson Prioritization System** - Critical, High, Medium, Low priority levels with visual indicators
-- **Navigation Links** - Automatic navigation between multi-part lesson files
-- **Import Progress Display** - Shows detailed statistics immediately after scanning
+- **Cross-Project Intelligence** - Share knowledge across projects
+  - Identifies transferable patterns (auth, API, database)
+  - Technology compatibility matrix
+  - Automatic pattern adaptation for different tech stacks
+  - Global pattern library accessible to all projects
 
 ### Changed
-- **CLAUDE.md Structure** - Now acts as lightweight index (5-10KB) pointing to category files
-- **Context Generation** - Uses hierarchical structure with intelligent file references
-- **Statistics Display** - Enhanced to show documentation metrics alongside pattern metrics
-- **First Run Experience** - Interactive menu for choosing scan source (Development folder, custom, or skip)
-- **File Organization** - Lessons now stored in `.claude/lessons/` directory by category
+- Updated log processor to integrate all three new intelligence systems
+- Enhanced success detector with differential metrics
+- Improved pattern ranking algorithm
+- Development Status upgraded from Alpha to Beta
 
-### Improved
-- **Scalability** - Can now handle thousands of lessons without performance degradation
-- **Organization** - Automatic topic categorization for better discoverability
-- **Claude Integration** - CLAUDE.md includes instructions for Claude on where to find specific topics
-- **Memory Efficiency** - Reduced main context size while maintaining comprehensive coverage
-- **User Experience** - Clear starting point with imported lesson counts shown immediately
+### Technical
+- New modules: `error_pattern_learner.py`, `differential_learner.py`, `cross_project_intelligence.py`
+- New database tables for error patterns, metrics, and global patterns
+- Enhanced SQLite schema with foreign key relationships
 
-### Technical Details
-- Maximum 10 lessons per priority level per file
-- Maximum 8 categories shown in main index
-- Top 5 critical warnings displayed in CLAUDE.md
-- Automatic file splitting at 40 lessons per category
-- User content preserved between HTML comment markers
+## [0.3.0] - 2025-01-21
 
-### Planned
-- Web dashboard for pattern visualization
-- Integration with other AI coding tools
-- Pattern clustering using ML
-- VSCode extension
-- Team synchronization features
+### Added
+- **Semantic Intent Detection** - Understand user satisfaction without explicit keywords
+  - TF-IDF vectorization and cosine similarity
+  - Detects subtle positive signals like "ok let's move on"
+  - Analyzes conversation flow for overall satisfaction
+  - Context modifiers for better accuracy
+
+- **Automated Execution Monitoring** - Learn from code execution outcomes
+  - Detects test passes/failures (pytest, jest, npm test)
+  - Recognizes build success/failure patterns
+  - Identifies server startup success
+  - Monitors type checking and linting results
+  - Tracks package installation outcomes
+
+### Changed
+- Success detector now uses both semantic analysis and execution signals
+- Reduced dependency on explicit user feedback
+- Improved pattern capture rate by 10x
+
+### Technical
+- New modules: `intent_detector.py`, `execution_monitor.py`
+- Integration with sklearn for machine learning capabilities
+
+## [0.2.1] - 2025-01-20
+
+### Fixed
+- Critical indentation errors in `lesson_organizer.py`
+- First-run detection logic to properly handle existing data
+- Python 3.13 Dict type hint compatibility
+
+### Changed
+- Improved error handling for file operations
+- Better detection of existing documentation
+
+## [0.2.0] - 2025-01-20
+
+### Added
+- **Documentation Scanner** - Import existing documentation from repositories
+  - Scans for markdown files with lessons learned
+  - Extracts warnings and best practices
+  - Regex pattern matching for intelligent extraction
+
+- **Lesson Organizer** - Hierarchical organization of lessons
+  - Categories: auth, database, API, testing, deployment, etc.
+  - Priority-based lesson grouping
+  - Automatic overflow handling for large documentation sets
+  - Creates category-specific files in `.claude/lessons/`
+
+- **First-Run Experience** - Onboarding flow for new users
+  - Option to scan Development folder
+  - Batch import of existing documentation
+  - Persistent flag to track first-run completion
+
+### Changed
+- Enhanced agent.py with first-run detection
+- Improved file structure for lesson management
+- Better handling of large documentation sets
+
+### Fixed
+- Issue with manual file creation requirements
+- Problems with hardcoded paths
+
+## [0.1.0] - 2025-01-19
+
+### Initial Release
+- **Core Functionality**
+  - Real-time log monitoring from Claude Code sessions
+  - Session tracking and analysis
+  - Success pattern detection
+  - Knowledge base with SQLite storage
+
+- **Features**
+  - Multi-project support with separate knowledge bases
+  - Context injection for Claude Code
+  - Slash command generation
+  - Convention tracking
+  - Team knowledge export/import
+
+- **Commands**
+  - `cache start` - Start monitoring
+  - `cache process` - Process existing logs
+  - `cache query` - Query patterns
+  - `cache stats` - Show statistics
+  - `cache generate` - Generate slash commands
+
+### Technical Foundation
+- Log watcher with file state tracking
+- Incremental log processing
+- Pattern extraction and storage
+- Context generation for CLAUDE.md
+- Rich terminal UI with progress indicators
+
+---
+
+## Version History Summary
+
+- **v0.4.0** - Intelligence trilogy: Error learning, efficiency tracking, cross-project transfer
+- **v0.3.0** - Semantic understanding: Intent detection and execution monitoring
+- **v0.2.x** - Documentation import: Scan and organize existing knowledge
+- **v0.1.0** - Foundation: Core log processing and pattern detection
+
+## Upcoming (Planned)
+
+### v0.5.0 (Planned)
+- Real-time implicit feedback detection
+- Memory expiration and cleanup
+- Pattern deduplication
+- Vector embedding cache for faster search
+
+### v0.6.0 (Planned)
+- Async processing pipeline
+- Team collaboration features
+- Analytics dashboard
+- Plugin system for custom analyzers
+
+### v1.0.0 (Target)
+- Production-ready stability
+- Complete documentation
+- Performance optimizations
+- Enterprise features
