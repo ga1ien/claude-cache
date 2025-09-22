@@ -1,58 +1,44 @@
 # Claude Cache 🧠
 
+```
+ ██████╗██╗      █████╗ ██╗   ██╗██████╗ ███████╗     ██████╗ █████╗  ██████╗██╗  ██╗███████╗
+██╔════╝██║     ██╔══██╗██║   ██║██╔══██╗██╔════╝    ██╔════╝██╔══██╗██╔════╝██║  ██║██╔════╝
+██║     ██║     ███████║██║   ██║██║  ██║█████╗      ██║     ███████║██║     ███████║█████╗
+██║     ██║     ██╔══██║██║   ██║██║  ██║██╔══╝      ██║     ██╔══██║██║     ██╔══██║██╔══╝
+╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗    ╚██████╗██║  ██║╚██████╗██║  ██║███████╗
+ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝     ╚═════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝
+```
+
 [![PyPI version](https://badge.fury.io/py/claude-cache.svg)](https://pypi.org/project/claude-cache/)
 [![Python Support](https://img.shields.io/pypi/pyversions/claude-cache)](https://pypi.org/project/claude-cache/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Your AI coding assistant now has perfect memory**
+**Give your AI coding assistant perfect recall. Claude Cache automatically learns from every successful solution and provides instant access to your accumulated knowledge directly within Claude Code.**
 
-Claude Cache is an intelligent memory system that ensures you never solve the same problem twice. It learns from every successful solution, understands context through semantic search, and provides instant access to your accumulated knowledge directly within Claude Code.
+## Why Claude Cache?
 
-## ✨ Why Claude Cache?
+Every developer loses hours re-solving problems they've already fixed. Claude Cache acts as your AI's intelligent memory system:
 
-Every developer loses hours re-solving problems they've already fixed. Claude Cache acts as your AI's perfect memory:
+- **🔄 Never Repeat Yourself**: Automatically captures successful solutions and patterns
+- **🔍 Find Instantly**: Semantic search understands context and meaning, not just keywords
+- **⚡ Zero Context Switching**: Access everything directly in Claude Code via native MCP tools
+- **🏗️ Cross-Project Intelligence**: Patterns learned in one project become available everywhere
+- **📚 Documentation Memory**: Index and instantly search any documentation you work with
 
-- **Remember Everything**: Automatically captures successful solutions and patterns
-- **Find Instantly**: Semantic search understands what you need, not just keywords
-- **Learn Continuously**: Every coding session makes future development faster
-- **Zero Context Switching**: Access everything directly in Claude Code via MCP tools
+## Real-World Impact
 
-## 🚀 Quick Start
+```python
+# Monday: Spend 2 hours debugging JWT refresh tokens
+# Save the solution when it works
 
-### Installation
-
-Choose your experience level:
-
-```bash
-# Basic - CLI tools with keyword search
-pip install claude-cache
-
-# Enhanced - Semantic search with AI understanding
-pip install "claude-cache[enhanced]"
-
-# Complete - Full MCP integration for Claude Code (Recommended)
-pip install "claude-cache[mcp]"
+# Friday: Hit the same issue again
+/mcp__cache__query "JWT refresh failing"
+# → Instantly get your exact solution with full context
 ```
 
-### Setup for Claude Code
+## Native Claude Code Tools
 
-1. **Add to `.claude.json`** in your project root:
-```json
-{
-  "mcpServers": {
-    "cache": {
-      "type": "stdio",
-      "command": "cache-mcp"
-    }
-  }
-}
-```
-
-2. **Restart Claude Code**
-
-3. **Type `/` to see your new tools!**
-
-## 🎯 Native Claude Code Tools
+Type `/` in Claude Code to access these powerful tools:
 
 ### `/mcp__cache__query`
 Search your entire knowledge base instantly
@@ -89,25 +75,53 @@ Example: /mcp__cache__browse "https://docs.example.com"
 Result: Documentation indexed and searchable
 ```
 
-## 🧠 How It Works
+## Quick Setup
 
-Claude Cache creates an intelligent layer between you and your AI assistant:
+### Installation
+```bash
+# Complete setup with MCP integration (Recommended)
+pip install "claude-cache[mcp]"
 
-1. **Automatic Learning**: Detects successful patterns through:
-   - Natural language understanding ("that worked!", "perfect!")
-   - Execution monitoring (passing tests, successful builds)
-   - Error resolution tracking
+# Enhanced with semantic search
+pip install "claude-cache[enhanced]"
 
-2. **Smart Retrieval**: Three-tier search system:
-   - **Semantic Search**: Understands meaning and context (with sentence-transformers)
-   - **TF-IDF Fallback**: Always works even without ML libraries
-   - **Pattern Matching**: Finds similar code structures
+# Basic CLI tools
+pip install claude-cache
+```
 
-3. **Context Awareness**: Maintains separate knowledge bases per project while sharing common patterns across projects
+### Claude Code Integration
+Add to your `.claude.json`:
+```json
+{
+  "mcpServers": {
+    "cache": {
+      "type": "stdio",
+      "command": "cache-mcp"
+    }
+  }
+}
+```
 
-## 💡 Real-World Examples
+Restart Claude Code and type `/` to see your new tools!
 
-### Example 1: Authentication Debugging
+## How It Works
+
+Claude Cache creates an intelligent layer between you and your AI:
+
+1. **🎯 Automatic Learning**: Detects successful patterns through natural language ("that worked!") and execution monitoring
+2. **🧠 Smart Retrieval**: Three-tier search system with semantic understanding, TF-IDF fallback, and pattern matching
+3. **🔒 Privacy First**: All data stored locally in `~/.claude/knowledge/` - works completely offline
+
+## Perfect For
+
+- **Solo Developers**: Build a personal knowledge base of solutions
+- **Development Teams**: Share successful patterns and best practices
+- **Learning**: Capture and revisit complex problem-solving approaches
+- **Productivity**: Eliminate repetitive problem-solving across projects
+
+## Real-World Examples
+
+### Authentication Debugging
 ```python
 # Monday: Spend 2 hours debugging JWT refresh tokens
 # Save the solution automatically when it works
@@ -117,7 +131,7 @@ Claude Cache creates an intelligent layer between you and your AI assistant:
 # → Instantly get your exact solution with context
 ```
 
-### Example 2: API Pattern Reuse
+### API Pattern Reuse
 ```python
 # Project A: Build a perfect rate limiter
 # Claude Cache automatically captures the pattern
@@ -127,7 +141,7 @@ Claude Cache creates an intelligent layer between you and your AI assistant:
 # → Get your rate limiter pattern with implementation details
 ```
 
-### Example 3: Team Knowledge Sharing
+### Team Knowledge Sharing
 ```python
 # Senior dev solves complex database optimization
 /mcp__cache__learn "Optimized query with indexes"
@@ -137,15 +151,14 @@ Claude Cache creates an intelligent layer between you and your AI assistant:
 # → Finds senior dev's solution with explanation
 ```
 
-## 📊 Performance & Privacy
+## Performance
 
 - **Speed**: <100ms query response for 10K+ patterns
 - **Accuracy**: 60-90% relevance in semantic matching
 - **Storage**: Efficient SQLite with optional vector embeddings
-- **Privacy**: All data stored locally in `~/.claude/knowledge/`
-- **No External Calls**: Works completely offline
+- **Privacy**: Zero external API calls, completely local
 
-## 🔧 CLI Usage
+## CLI Usage
 
 For terminal power users:
 
@@ -166,7 +179,7 @@ cache browse https://docs.example.com
 cache stats
 ```
 
-## 📦 Architecture
+## Architecture
 
 ```
 Claude Cache/
@@ -186,7 +199,7 @@ Claude Cache/
     └── Pattern Extractor
 ```
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Areas of interest:
 - Additional MCP tools
@@ -196,16 +209,16 @@ We welcome contributions! Areas of interest:
 
 See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
 
-## 📄 License
+## License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 Built with love for the developer community. Special thanks to all early adopters and contributors who helped shape Claude Cache into what it is today.
 
 ---
 
-*Note: Claude Cache is an independent tool for enhancing Claude Code, not an official Anthropic product.*
+**Transform your coding workflow.** Install Claude Cache today and give your AI the perfect memory it deserves.
 
-**Ready to give your AI perfect memory?** Install now and never solve the same problem twice!
+*Claude Cache is an independent tool for enhancing Claude Code, not an official Anthropic product.*
