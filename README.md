@@ -60,9 +60,9 @@ Claude Cache now has **4 ways to learn automatically**:
 ### Core Features
 - **First-Run Documentation Import** - Scans your entire Development folder for existing documentation
 - **Automatic Log Processing** - Monitors and processes Claude Code session logs in real-time
-- **Intelligent Lesson Organization** - Categorizes lessons by topic (auth, database, API, etc.)
-- **Smart Document Management** - Keeps CLAUDE.md under 30KB with overflow handling
-- **Multi-Project Support** - Separate knowledge bases for each project
+- **Hierarchical Documentation** - Lightweight CLAUDE.md index + unlimited categorized lessons
+- **Smart Document Management** - Keeps CLAUDE.md under 5-10KB with overflow to category files
+- **Multi-Project Support** - Each project gets its own `.claude/` directory
 
 ### v0.3.0 Features
 - **Semantic Intent Detection** - Understands user satisfaction without explicit keywords
@@ -77,6 +77,34 @@ Claude Cache now has **4 ways to learn automatically**:
 - **Prevention Tips Generator** - Automatic best practices from errors
 
 ## How It Works
+
+### File Organization
+
+Claude Cache creates a hierarchical documentation structure **in each project**:
+
+```
+your-project/
+├── .claude/
+│   ├── CLAUDE.md              # Main index (5-10KB) - Claude reads this first
+│   ├── lessons/               # Categorized lessons (unlimited size)
+│   │   ├── authentication_lessons.md
+│   │   ├── database_lessons.md
+│   │   ├── api_lessons.md
+│   │   ├── debugging_lessons.md
+│   │   ├── performance_lessons.md
+│   │   ├── security_lessons.md
+│   │   └── [category]_lessons.md
+│   └── commands/              # Slash commands for Claude Code
+│       ├── project-context.md
+│       ├── best-practices.md
+│       └── quick-ref.md
+```
+
+**Key Points:**
+- **CLAUDE.md** is a lightweight index (5-10KB) that Claude reads
+- **lessons/** contains unlimited categorized documentation
+- **Each project** maintains its own `.claude/` directory
+- **Automatic organization** by topic (auth, database, API, etc.)
 
 ### Learning Pipeline
 1. **Monitor** - Watches Claude Code sessions in real-time
@@ -239,31 +267,11 @@ cache prevent --project my-app
 cache analyze --pattern auth --target new-project
 ```
 
-## File Structure
+## Configuration
 
-Claude Cache creates the following structure **in each project directory**:
+### Data Storage
 
-```
-your-project/
-├── .claude/
-│   ├── CLAUDE.md              # Main index (5-10KB, Claude reads this)
-│   ├── lessons/               # Categorized lessons (unlimited)
-│   │   ├── authentication_lessons.md
-│   │   ├── database_lessons.md
-│   │   ├── api_lessons.md
-│   │   ├── debugging_lessons.md
-│   │   ├── performance_lessons.md
-│   │   ├── security_lessons.md
-│   │   └── [category]_lessons.md
-│   └── commands/              # Slash commands for Claude Code
-│       ├── project-context.md
-│       ├── best-practices.md
-│       └── quick-ref.md
-```
-
-### Global Knowledge Base
-
-Claude Cache stores its global data at:
+Claude Cache stores its global knowledge base at:
 ```
 ~/.claude/knowledge/
 ├── cache.db          # Main knowledge base
@@ -271,8 +279,6 @@ Claude Cache stores its global data at:
 ├── metrics.db        # Efficiency metrics (v0.4.0)
 └── global.db         # Cross-project patterns (v0.4.0)
 ```
-
-## Configuration
 
 ### Intelligence Configuration (v0.4.0)
 
