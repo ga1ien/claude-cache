@@ -239,15 +239,40 @@ cache prevent --project my-app
 cache analyze --pattern auth --target new-project
 ```
 
-## Configuration
+## File Structure
 
-Claude Cache stores its data at:
+Claude Cache creates the following structure **in each project directory**:
+
 ```
-~/.claude/knowledge/cache.db    # Main knowledge base
-~/.claude/knowledge/errors.db   # Error patterns (v0.4.0)
-~/.claude/knowledge/metrics.db  # Efficiency metrics (v0.4.0)
-~/.claude/knowledge/global.db   # Cross-project patterns (v0.4.0)
+your-project/
+├── .claude/
+│   ├── CLAUDE.md              # Main index (5-10KB, Claude reads this)
+│   ├── lessons/               # Categorized lessons (unlimited)
+│   │   ├── authentication_lessons.md
+│   │   ├── database_lessons.md
+│   │   ├── api_lessons.md
+│   │   ├── debugging_lessons.md
+│   │   ├── performance_lessons.md
+│   │   ├── security_lessons.md
+│   │   └── [category]_lessons.md
+│   └── commands/              # Slash commands for Claude Code
+│       ├── project-context.md
+│       ├── best-practices.md
+│       └── quick-ref.md
 ```
+
+### Global Knowledge Base
+
+Claude Cache stores its global data at:
+```
+~/.claude/knowledge/
+├── cache.db          # Main knowledge base
+├── errors.db         # Error patterns (v0.4.0)
+├── metrics.db        # Efficiency metrics (v0.4.0)
+└── global.db         # Cross-project patterns (v0.4.0)
+```
+
+## Configuration
 
 ### Intelligence Configuration (v0.4.0)
 
