@@ -77,7 +77,7 @@ Add to your project's `.claude.json`:
   "mcpServers": {
     "cache": {
       "type": "stdio",
-      "command": "cache-mcp-fast",
+      "command": "cache-mcp",
       "args": [],
       "env": {}
     }
@@ -91,7 +91,7 @@ Or globally in `~/.claude/claude_desktop_config.json`:
   "mcpServers": {
     "cache": {
       "type": "stdio",
-      "command": "cache-mcp-fast",
+      "command": "cache-mcp",
       "args": [],
       "env": {}
     }
@@ -173,7 +173,7 @@ claude-code --mcp-debug
 
 2. Test MCP server directly:
 ```bash
-cache-mcp-fast
+cache-mcp
 # Should start without errors
 ```
 

@@ -2,7 +2,7 @@
   "mcpServers": {
     "cache": {
       "type": "stdio",
-      "command": "cache-mcp-fast",
+      "command": "cache-mcp",
       "args": [],
       "env": {}
     }

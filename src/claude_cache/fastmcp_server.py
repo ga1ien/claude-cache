@@ -303,7 +303,7 @@ async def browse(url: str, project_name: str = "default") -> str:
 
 # Main entry point
 def main():
-    """Entry point for cache-mcp-fast command"""
+    """Entry point for cache-mcp command"""
     mcp.run(transport='stdio')
 
 if __name__ == "__main__":

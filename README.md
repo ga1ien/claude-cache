@@ -42,7 +42,7 @@ pip install "claude-cache[mcp]"
   "mcpServers": {
     "cache": {
       "type": "stdio",
-      "command": "cache-mcp-fast"
+      "command": "cache-mcp"
     }
   }
 }

@@ -120,7 +120,7 @@ Then add to `.claude.json`:
   "mcpServers": {
     "cache": {
       "type": "stdio",
-      "command": "cache-mcp-fast"
+      "command": "cache-mcp"
     }
   }
 }
@@ -142,7 +142,7 @@ echo '{
   "mcpServers": {
     "cache": {
       "type": "stdio",
-      "command": "cache-mcp-fast"
+      "command": "cache-mcp"
     }
   }
 }' > .claude.json
@@ -631,7 +631,7 @@ pip show claude-cache
 # Should show: Version: 0.6.1 or higher
 
 # 2. Test MCP server
-cache-mcp-fast
+cache-mcp
 # Should start without errors
 
 # 3. Verify .claude.json

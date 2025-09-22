@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **MCP Implementation** - Switched from Server+stdio_server to FastMCP
-  - New `cache-mcp-fast` command for stable MCP server
+  - New `cache-mcp` command for stable MCP server
   - Silent mode for all components to prevent protocol pollution
   - Improved error handling and async/await patterns
 
