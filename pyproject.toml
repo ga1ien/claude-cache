@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "claude-cache"
 version = "0.6.2"
-description = "Your AI coding assistant now has perfect memory - Never solve the same problem twice with intelligent pattern learning and instant semantic search"
+description = "Perfect memory for Claude - Never solve the same coding problem twice"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
