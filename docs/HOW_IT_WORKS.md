@@ -1,6 +1,6 @@
-# 🧠 Claude Cache - Complete Masterclass
+# 🧠 How Claude Cache Works
 
-**Everything you need to know about Claude Cache - from concept to mastery**
+**A comprehensive guide to understanding and using Claude Cache effectively**
 
 ## Table of Contents
 1. [Core Concept](#core-concept)
@@ -30,6 +30,15 @@ Claude Cache transforms every coding session into permanent knowledge. It's like
 1. **Automatic Learning** - Detects successful patterns without manual intervention
 2. **Semantic Understanding** - Knows that "auth broken" relates to "JWT failing"
 3. **Instant Retrieval** - Sub-100ms access to thousands of patterns
+
+### Privacy & Security
+
+**Everything stays on your machine**:
+- **No cloud storage** - All data stored locally in `~/.claude/`
+- **No external API calls** - Works completely offline
+- **No tracking or telemetry** - Your code and patterns stay private
+- **No data sharing** - Each project's knowledge is isolated
+- **You own your data** - Simple SQLite database you can inspect, export, or delete
 
 ---
 
