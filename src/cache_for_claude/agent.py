@@ -482,6 +482,10 @@ class CacheAgent:
             else:
                 console.print("[dim]Skipping documentation scan. You can run 'cache scan-docs' later.[/dim]")
 
+            # Mark first run as complete after any choice
+            first_run_flag = Path.home() / '.claude' / '.first_run_complete'
+            first_run_flag.touch()
+
         self.first_run_check_done = True
 
     def _batch_scan_all_projects(self):
@@ -686,10 +690,6 @@ class CacheAgent:
         console.print("="*60 + "\n")
         console.print("[dim]Claude will now automatically use this knowledge![/dim]")
         console.print("[dim]Say 'Perfect!' or 'Thanks!' when things work to save new patterns.[/dim]\n")
-
-        # Mark first run as complete
-        first_run_flag = Path.home() / '.claude' / '.first_run_complete'
-        first_run_flag.touch()
 
     def _scan_custom_directory(self, directory_path: str):
         """Scan a custom directory for projects and documentation"""
