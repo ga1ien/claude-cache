@@ -126,10 +126,14 @@ class CacheAgent:
         observer = self.watcher.start()
 
         try:
-            with Live(Panel(self.generate_status_table(), title="🧠 Claude Cache - Live Monitoring", border_style="blue"), refresh_per_second=1) as live:
+            # Clear console for clean display
+            console.clear()
+
+            with Live(self.generate_status_table(), refresh_per_second=0.033, auto_refresh=False) as live:
                 while True:
-                    time.sleep(1)
-                    live.update(Panel(self.generate_status_table(), title="🧠 Claude Cache - Live Monitoring", border_style="blue"))
+                    time.sleep(30)
+                    live.update(self.generate_status_table())
+                    live.refresh()
 
         except KeyboardInterrupt:
             console.print("\n[yellow]Stopping monitoring...[/yellow]")
@@ -374,7 +378,7 @@ class CacheAgent:
         patterns = stats.get('total_patterns', 0)
         projects = stats.get('projects', 0)
 
-        table = Table(show_header=True, border_style="dim")
+        table = Table(title="🧠 Claude Cache - Live Monitoring", show_header=True, border_style="blue")
         table.add_column("Metric", style="cyan", width=20)
         table.add_column("Value", style="green", width=15)
         table.add_column("Status", style="yellow", width=30)
