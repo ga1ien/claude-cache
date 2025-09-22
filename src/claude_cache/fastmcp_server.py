@@ -179,7 +179,7 @@ async def suggest(context: str = "", project_name: str = "default") -> str:
                 output += f"   Relevance: {r.get('similarity', 0):.2%}\n"
 
         if not patterns and not relevant:
-            output += "No suggestions available yet. Save patterns with `cache_learn` to build your knowledge base!"
+            output += "No suggestions available yet. Save patterns with `/mcp__cache__learn` to build your knowledge base!"
 
         return output
 
@@ -290,11 +290,11 @@ async def browse(url: str, project_name: str = "default") -> str:
         output += f"- Best Practices: {len(extracted.get('best_practices', []))}\n\n"
 
         if kb.vector_search:
-            output += "🔍 **Auto-indexed for vector search** - Now searchable with `cache_query`!\n\n"
+            output += "🔍 **Auto-indexed for vector search** - Now searchable with `/mcp__cache__query`!\n\n"
 
         output += "🎯 **Next Steps:**\n"
-        output += "- Try: `cache_query` with topics from this documentation\n"
-        output += "- Use: `cache_stats` to see updated knowledge base\n"
+        output += "- Try: `/mcp__cache__query` with topics from this documentation\n"
+        output += "- Use: `/mcp__cache__stats` to see updated knowledge base\n"
 
         return output
 
