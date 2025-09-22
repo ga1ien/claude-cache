@@ -158,41 +158,41 @@ class LessonOrganizer:
                 ""
             ]
 
-            # Group by priority
-            for priority in ['critical', 'high', 'medium', 'low']:
-                priority_lessons = [l for l in lessons if l['priority'] == priority]
+        # Group by priority
+        for priority in ['critical', 'high', 'medium', 'low']:
+            priority_lessons = [l for l in lessons if l['priority'] == priority]
 
-                if priority_lessons:
-                    if priority == 'critical':
-                        content_lines.append("## 🔴 Critical Issues")
-                    elif priority == 'high':
-                        content_lines.append("## 🟡 Important Lessons")
-                    else:
-                        content_lines.append(f"## {priority.title()} Priority")
+            if priority_lessons:
+                if priority == 'critical':
+                    content_lines.append("## 🔴 Critical Issues")
+                elif priority == 'high':
+                    content_lines.append("## 🟡 Important Lessons")
+                else:
+                    content_lines.append(f"## {priority.title()} Priority")
 
-                    content_lines.append("")
+                content_lines.append("")
 
-                    # Show limited lessons per priority, with overflow handling
-                    displayed = 0
-                    for lesson in priority_lessons:
-                        if displayed >= self.MAX_LESSONS_PER_PRIORITY:
-                            remaining = len(priority_lessons) - displayed
-                            content_lines.append(f"\n*... and {remaining} more {priority} priority lessons*")
-                            content_lines.append("")
-                            break
-
-                        lesson_text = lesson['lesson'][:self.LESSON_PREVIEW_LENGTH]
-                        if len(lesson['lesson']) > self.LESSON_PREVIEW_LENGTH:
-                            lesson_text += "..."
-
-                        content_lines.append(f"- {lesson_text}")
-                        if lesson['source'] != 'auto-learned':
-                            content_lines.append(f"  *Source: {lesson['source']}*")
+                # Show limited lessons per priority, with overflow handling
+                displayed = 0
+                for lesson in priority_lessons:
+                    if displayed >= self.MAX_LESSONS_PER_PRIORITY:
+                        remaining = len(priority_lessons) - displayed
+                        content_lines.append(f"\n*... and {remaining} more {priority} priority lessons*")
                         content_lines.append("")
-                        displayed += 1
+                        break
 
-            with open(file_path, 'w') as f:
-                f.write('\n'.join(content_lines))
+                    lesson_text = lesson['lesson'][:self.LESSON_PREVIEW_LENGTH]
+                    if len(lesson['lesson']) > self.LESSON_PREVIEW_LENGTH:
+                        lesson_text += "..."
+
+                    content_lines.append(f"- {lesson_text}")
+                    if lesson['source'] != 'auto-learned':
+                        content_lines.append(f"  *Source: {lesson['source']}*")
+                    content_lines.append("")
+                    displayed += 1
+
+        with open(file_path, 'w') as f:
+            f.write('\n'.join(content_lines))
 
     def _create_split_category_files(self, category: str, lessons: List, project_name: str):
         """Create multiple files when a category has too many lessons"""

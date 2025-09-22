@@ -433,10 +433,30 @@ class CacheAgent:
 
     def _check_first_run(self):
         """Check if this is first run and offer to scan existing documentation"""
+        # Check for first-run flag file
+        first_run_flag = Path.home() / '.claude' / '.first_run_complete'
+        if first_run_flag.exists():
+            self.first_run_check_done = True
+            return
+
         # Check if knowledge base is empty
         stats = self.kb.get_statistics()
+        doc_stats = self._get_documentation_statistics()
 
-        if stats.get('patterns', 0) == 0 and stats.get('requests', 0) == 0:
+        # Check if we have any data at all (patterns, requests, or documentation)
+        has_patterns = stats.get('total_patterns', 0) > 0
+        has_requests = stats.get('total_requests', 0) > 0
+        has_docs = doc_stats['total_docs'] > 0
+
+        # Skip first-run if we have any existing data
+        if has_patterns or has_requests or has_docs:
+            console.print(f"[dim]Found existing data: {doc_stats['total_docs']} docs, {stats.get('total_patterns', 0)} patterns[/dim]")
+            # Create flag file to skip future first-run checks
+            first_run_flag.touch()
+            self.first_run_check_done = True
+            return
+
+        if not has_patterns and not has_requests and not has_docs:
             console.print("\n[bold yellow]🎉 Welcome to Claude Cache![/bold yellow]")
             console.print("\nFirst time setup detected. Let's import your existing documentation!")
             console.print("\nWould you like to scan for existing documentation?")
@@ -666,6 +686,10 @@ class CacheAgent:
         console.print("="*60 + "\n")
         console.print("[dim]Claude will now automatically use this knowledge![/dim]")
         console.print("[dim]Say 'Perfect!' or 'Thanks!' when things work to save new patterns.[/dim]\n")
+
+        # Mark first run as complete
+        first_run_flag = Path.home() / '.claude' / '.first_run_complete'
+        first_run_flag.touch()
 
     def _scan_custom_directory(self, directory_path: str):
         """Scan a custom directory for projects and documentation"""
