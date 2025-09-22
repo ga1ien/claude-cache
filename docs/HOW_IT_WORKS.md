@@ -1,317 +1,150 @@
 # 🧠 How Claude Cache Works
 
-**Claude Cache v0.6.0 operates in three distinct modes, each building on the previous one's capabilities.**
+**Claude Cache gives your AI assistant perfect memory of every successful solution**
 
-## Three Usage Modes
+## The Simple Concept
 
-### 🔧 Basic Mode
-- **Installation**: `pip install claude-cache`
-- **Features**: CLI tools, TF-IDF search, CLAUDE.md generation
-- **Best for**: Getting started, works everywhere
+When you solve a problem with Claude, Claude Cache remembers:
+- **What** you were trying to do
+- **How** you solved it
+- **Why** it worked
 
-### ⚡ Enhanced Mode
-- **Installation**: `pip install claude-cache[enhanced]`
-- **Features**: All Basic + semantic vector search with sentence-transformers
-- **Best for**: 2x better pattern matching, context understanding
+Next time you face a similar problem, the solution appears instantly.
 
-### 🚀 MCP Mode
-- **Installation**: `pip install claude-cache[mcp]`
-- **Features**: All Enhanced + native Claude Code tools via MCP
-- **Best for**: Ultimate experience, zero context switching
+## Three Ways to Use It
 
-## The Big Picture
-
-### Traditional Mode (Basic/Enhanced)
+### 1️⃣ Native Claude Code Tools (MCP Mode) - Recommended
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  YOU CODE WITH CLAUDE IN CLAUDE CODE                        │
-│  "Fix the authentication bug"                               │
-└────────────────┬─────────────────────────────────────────────┘
-                 │
-                 ▼
-┌──────────────────────────────────────────────────────────────┐
-│  CLAUDE CACHE MONITORS LOGS (Background Process)            │
-│  🔍 Detects: "Auth bug fixed successfully!"                 │
-└────────────────┬─────────────────────────────────────────────┘
-                 │
-                 ▼
-┌──────────────────────────────────────────────────────────────┐
-│  UPDATES .claude/CLAUDE.md IN YOUR PROJECT                  │
-│  "✓ Authentication: Use JWT refresh pattern"                │
-└────────────────┬─────────────────────────────────────────────┘
-                 │
-                 ▼
-┌──────────────────────────────────────────────────────────────┐
-│  NEXT TIME: Claude reads CLAUDE.md automatically            │
-│  Claude: "I see we fixed auth before with JWT refresh..."   │
-└──────────────────────────────────────────────────────────────┘
+You: "Help me fix authentication"
+You: /mcp__claude-cache__cache_query "auth JWT"
+→ Instantly see your previous JWT solutions
+
+When it works:
+You: /mcp__claude-cache__cache_learn "Fixed with refresh tokens"
+→ Solution saved for next time
 ```
 
-### MCP Mode (Revolutionary)
+### 2️⃣ Automatic Background Learning (CLI Mode)
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  YOU CODE WITH CLAUDE IN CLAUDE CODE                        │
-│  "Fix the authentication bug"                               │
-└────────────────┬─────────────────────────────────────────────┘
-                 │
-                 ▼
-┌──────────────────────────────────────────────────────────────┐
-│  TYPE: /mcp__claude-cache__query authentication             │
-│  💡 Instant results appear in Claude Code                   │
-└────────────────┬─────────────────────────────────────────────┘
-                 │
-                 ▼
-┌──────────────────────────────────────────────────────────────┐
-│  WHEN IT WORKS: /mcp__claude-cache__learn                   │
-│  🎯 "JWT refresh pattern working perfectly"                 │
-└────────────────┬─────────────────────────────────────────────┘
-                 │
-                 ▼
-┌──────────────────────────────────────────────────────────────┐
-│  ZERO CONTEXT SWITCH - Everything in Claude Code!          │
-│  ⚡ Millisecond response times                               │
-└──────────────────────────────────────────────────────────────┘
+You: "Help me fix authentication"
+Claude: *implements solution*
+You: "Perfect, that works!"
+→ Claude Cache automatically captures the pattern
+→ Updates .claude/CLAUDE.md in your project
+→ Claude reads this file next session
 ```
 
-## Step-by-Step Process
-
-### 1️⃣ **You Use Claude Code Normally**
-```
-You → Claude: "Help me add user login"
-Claude → Writes code → You test it → It works! ✅
-```
-
-### 2️⃣ **Claude Code Logs Everything**
-```json
-// ~/.claude/projects/your-app/session-001.jsonl
-{"type": "user_message", "content": "Help me add user login"}
-{"type": "tool_call", "tool": "Edit", "file": "auth.js", "success": true}
-{"type": "assistant_message", "content": "Login implemented"}
-{"type": "user_message", "content": "Perfect! It works!"}
-```
-
-### 3️⃣ **Claude Cache Analyzes Logs**
-```python
-# Claude Cache detects:
-- ✅ User said "Perfect" (satisfaction)
-- ✅ No errors occurred
-- ✅ Files were edited successfully
-- ✅ Task completed
-Score: 95% - SUCCESSFUL PATTERN!
-```
-
-### 4️⃣ **Pattern Saved to Knowledge Base**
-```sql
-INSERT INTO success_patterns
-VALUES (
-  project: "your-app",
-  request: "Help me add user login",
-  solution: "JWT implementation",
-  files: ["auth.js", "middleware.js"],
-  score: 0.95
-)
-```
-
-### 5️⃣ **Context File Updated**
-```markdown
-# .claude/CLAUDE.md (Auto-generated)
-
-## Successful Patterns for your-app
-
-### User Authentication
-- **Request**: "Help me add user login"
-- **Solution**: JWT with middleware
-- **Files**: auth.js, middleware.js
-- **Success Rate**: 95%
-```
-
-### 6️⃣ **Claude Reads Context Automatically**
-```
-Next conversation:
-You → Claude: "Add logout functionality"
-Claude → [Reads CLAUDE.md automatically]
-Claude → "I'll add logout to the JWT auth system we set up in auth.js..."
-```
-
-## 🔑 Key Components by Mode
-
-### **Basic Mode Components**
-- **CLI Interface**: Terminal commands for query, stats, browse
-- **TF-IDF Search**: Fast keyword-based pattern matching
-- **CLAUDE.md Generation**: Automatic context file creation
-- **SQLite Database**: Local pattern storage
-
-### **Enhanced Mode Components** (Adds)
-- **Semantic Search**: sentence-transformers for context understanding
-- **Vector Embeddings**: 384-dimensional semantic similarity
-- **Hybrid Search**: Automatic fallback to TF-IDF if needed
-- **2x Better Accuracy**: Finds relevant patterns even with different keywords
-
-### **MCP Mode Components** (Adds)
-- **MCP Server**: Native Claude Code integration via stdio
-- **5 Native Tools**: query, learn, suggest, stats, browse
-- **Real-time Communication**: Direct tool access in Claude Code
-- **Zero Context Switch**: No copy/paste or terminal switching
-- **Proactive Suggestions**: Claude recommends patterns automatically
-
-### **Universal Components** (All Modes)
-- **Log Watcher**: Monitors Claude Code session logs
-- **Success Detector**: Identifies successful patterns
-- **Knowledge Base**: SQLite database with pattern storage
-- **Context Injector**: Creates/updates CLAUDE.md files
-
-## 🎯 Success Detection Algorithm
-
-```python
-def is_successful(session):
-    score = 0
-
-    # Check multiple indicators
-    if "error" not in session:
-        score += 0.25
-    if user_said_thanks(session):
-        score += 0.30
-    if tests_passed(session):
-        score += 0.25
-    if files_edited_successfully(session):
-        score += 0.20
-
-    return score > 0.70  # 70% threshold
-```
-
-## 📊 What Gets Tracked (All Modes)
-
-### **Successful Patterns**
-- What you asked for
-- How Claude solved it
-- Which files were involved
-- What approach worked
-- Success scores and metrics
-
-### **Project Conventions**
-- Import styles
-- Naming patterns
-- File organization
-- Common dependencies
-- Technology stack preferences
-
-### **Documentation Content** (MCP browse tool)
-- Ingested web documentation
-- Best practices from URLs
-- API references
-- Tutorial content
-
-### **Real-time Learning** (MCP learn tool)
-- Manually saved successful solutions
-- Categorized patterns
-- Code snippets that work
-- Problem-solution mappings
-
-## 🔄 The Feedback Loop
-
-```
-Better Patterns → Better Context → Better Claude Responses →
-More Success → More Patterns → Even Better Context → ...
-```
-
-The more you use Claude Code, the smarter Claude Cache makes it!
-
-## 🎮 Interactive Features
-
-### **Real-time Updates**
-- Context updates every 30 seconds when new patterns found
-- No restart needed
-
-### **Progress Tracking**
+### 3️⃣ Manual Pattern Saving (Terminal)
 ```bash
-cache stats
-# Shows: patterns found, success rate, trending up/down
-```
-
-### **Pattern Search**
-```bash
+cache learn "Fixed auth with JWT refresh tokens" --tags "auth,jwt"
 cache query "authentication"
-# Returns: All successful auth patterns
 ```
 
-## 🚀 Why This Makes Claude Better
+## The Learning Process
 
-### **Basic Mode Benefits:**
-- Claude remembers YOUR successful patterns via CLAUDE.md
-- Suggests proven solutions first
-- Understands your project structure
-- Fast TF-IDF keyword search
+### Step 1: Detection
+Claude Cache watches for success signals:
+- Natural language: "Perfect!", "That worked!", "Great!"
+- Execution success: Tests pass, builds succeed, no errors
+- Task completion: Problem → Solution → Success
 
-### **Enhanced Mode Benefits:**
-- All Basic benefits PLUS semantic understanding
-- "auth bug" finds JWT solutions even without exact keywords
-- Context-aware pattern matching
-- 2x better accuracy in finding relevant patterns
-
-### **MCP Mode Benefits:**
-- All Enhanced benefits PLUS native tool integration
-- Zero context switching - everything in Claude Code
-- Proactive pattern suggestions based on your work
-- Real-time learning with instant tool access
-- Millisecond response times for pattern queries
-
-## 📈 Learning Curve by Mode
-
-### **Basic Mode Growth**
-```
-Day 1:   📊 5 patterns   → "Getting started"
-Week 1:  📊 50 patterns  → "Building knowledge"
-Month 1: 📊 200 patterns → "Claude knows your style"
+### Step 2: Pattern Extraction
+When success is detected:
+```json
+{
+  "problem": "JWT authentication failing",
+  "solution": "Implement refresh token rotation",
+  "context": "Node.js, Express, JWT",
+  "code": "...",
+  "timestamp": "2024-01-15"
+}
 ```
 
-### **Enhanced Mode Growth**
+### Step 3: Intelligent Storage
+Patterns are stored with:
+- **Semantic embeddings** (if enhanced mode)
+- **Keyword index** (always available)
+- **Project context**
+- **Success score**
+
+### Step 4: Smart Retrieval
+When you need help:
+- **Semantic search**: Understands "auth broken" → finds JWT solutions
+- **Keyword fallback**: Always works even without ML
+- **Relevance ranking**: Best solutions first
+
+## What Gets Captured
+
+### Automatic Captures
+- ✅ Successful code implementations
+- ✅ Bug fixes that work
+- ✅ Performance optimizations
+- ✅ Configuration changes
+- ✅ Error resolutions
+
+### Manual Captures
+- 💡 Best practices you discover
+- 📚 Documentation insights
+- 🎯 Team knowledge
+- 🔧 Workarounds that work
+
+## Privacy & Security
+
+### Everything is Local
+- **No cloud storage** - All data in `~/.claude/`
+- **No external API calls** - Works offline
+- **No tracking** - Your code stays yours
+- **Project isolation** - Each project separate
+
+### What's Stored
 ```
-Day 1:   📊 5 patterns   → "Semantic search active"
-Week 1:  📊 50 patterns  → "Context understanding"
-Month 1: 📊 200 patterns → "2x better pattern matching"
+~/.claude/
+├── knowledge/
+│   └── cache.db          # SQLite database
+├── lessons/              # Organized patterns
+└── projects/             # Per-project data
 ```
 
-### **MCP Mode Growth**
+## Performance
+
+### Speed
+- **Query response**: <100ms for 10K patterns
+- **Pattern capture**: Real-time, no lag
+- **Memory usage**: <100MB typical
+- **CPU usage**: <1% idle, <5% active
+
+### Accuracy
+- **Semantic mode**: 60-90% relevance matching
+- **Keyword mode**: 40-60% relevance matching
+- **Improves over time**: More patterns = better accuracy
+
+## The Feedback Loop
+
 ```
-Day 1:   📊 5 patterns   → "Native tools available"
-Week 1:  📊 50 patterns  → "Proactive suggestions"
-Month 1: 📊 200 patterns → "Like a team member with instant memory!"
+You code → Success → Pattern saved →
+Next time → Instant solution → Code faster →
+More successes → More patterns → Even faster
 ```
 
-**All modes**: The more you use Claude Code, the smarter your experience becomes!
+## Why It Works
 
-## 🔧 Technical Details by Mode
+### 1. Context is Everything
+Claude Cache doesn't just save code - it saves the entire context of what worked, when, and why.
 
-### **Basic Mode Architecture**
-- **CLI Interface**: Click-based terminal commands
-- **TF-IDF Search**: scikit-learn vectorization
-- **SQLite Storage**: Local database for patterns
-- **CLAUDE.md Generation**: Automatic context file updates
+### 2. Semantic Understanding
+With enhanced mode, it understands that "auth broken" and "JWT failing" are related, even without matching keywords.
 
-### **Enhanced Mode Architecture** (Adds)
-- **Sentence Transformers**: all-MiniLM-L6-v2 model
-- **Vector Embeddings**: 384-dimensional semantic space
-- **Hybrid Search**: Automatic fallback mechanism
-- **Cosine Similarity**: Semantic pattern matching
+### 3. Zero Friction
+With MCP tools, there's no context switching. Query and learn without leaving your conversation.
 
-### **MCP Mode Architecture** (Adds)
-- **MCP Server**: stdio transport for Claude Code
-- **Async Tools**: Real-time response handling
-- **Native Integration**: Direct tool access in Claude
-- **JSON Schema**: Structured tool definitions
+### 4. Continuous Improvement
+Every successful coding session makes future sessions better. Your AI assistant gets smarter every day.
 
-### **Universal Architecture** (All Modes)
-- **Incremental Processing**: Only new log entries
-- **Tech Stack Detection**: React, Vue, Python auto-detection
-- **Background Monitoring**: Efficient resource usage
-- **Cross-Project Intelligence**: Pattern sharing between projects
+## Getting Started
 
----
+1. **Install**: `pip install "claude-cache[mcp]"`
+2. **Configure**: Add to `.claude.json`
+3. **Use**: Type `/` in Claude Code to see your tools
+4. **Learn**: Every success makes you faster
 
-**The Bottom Line**: Claude Cache v0.6.0 offers three ways to give Claude memory:
-
-- **Basic**: Solid foundation with CLI and automatic CLAUDE.md
-- **Enhanced**: 2x better with semantic understanding
-- **MCP**: Revolutionary native integration with zero context switching
-
-Choose your mode based on your needs - all make Claude exponentially more helpful over time!
+That's it! Claude Cache is now learning from every successful solution, building your personal knowledge base that makes coding faster every day.

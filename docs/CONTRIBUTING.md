@@ -68,8 +68,8 @@ cd claude-cache
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install in development mode
-pip install -e ".[dev]"
+# Install in development mode with all features
+pip install -e ".[all,dev]"
 ```
 
 ## Testing
@@ -79,7 +79,7 @@ pip install -e ".[dev]"
 pytest
 
 # Run with coverage
-pytest --cov=cache_for_claude
+pytest --cov=claude_cache
 
 # Run specific test
 pytest tests/test_success_detector.py
@@ -101,11 +101,11 @@ pytest tests/test_success_detector.py
 
 ## Release Process
 
-1. Update version in `__init__.py`
+1. Update version in `pyproject.toml`
 2. Update CHANGELOG.md
 3. Create release PR
 4. Tag release after merge
-5. Build and publish to PyPI
+5. Push tag to trigger automatic PyPI deployment
 
 ## Areas for Contribution
 
@@ -116,6 +116,8 @@ pytest tests/test_success_detector.py
 - Bug fixes
 
 ### Feature Ideas
+- Enhanced MCP tools
+- Team collaboration features
 - Web dashboard
 - Additional pattern detection algorithms
 - Integration with other AI tools

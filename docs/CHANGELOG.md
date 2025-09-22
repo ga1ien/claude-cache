@@ -5,6 +5,50 @@ All notable changes to Claude Cache will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2025-01-21
+
+### Fixed
+- **Critical MCP Server Issues** - Complete rewrite using FastMCP pattern
+  - Fixed asyncio TaskGroup errors in MCP server
+  - Resolved JSON-RPC protocol pollution from stdout
+  - Fixed indentation bug causing methods to be outside classes
+  - Added missing methods to VectorSearchEngine and DocumentationScanner
+
+### Changed
+- **MCP Implementation** - Switched from Server+stdio_server to FastMCP
+  - New `cache-mcp-fast` command for stable MCP server
+  - Silent mode for all components to prevent protocol pollution
+  - Improved error handling and async/await patterns
+
+### Technical
+- New module: `fastmcp_server.py` with FastMCP implementation
+- Fixed `vector_search.py` class method indentation
+- Added `get_project_patterns()` to KnowledgeBase
+- Added `extract_lessons()` to DocumentationScanner
+
+## [0.6.0] - 2025-01-21
+
+### Added
+- **MCP (Model Context Protocol) Integration** - Native Claude Code tools
+  - 5 new slash commands accessible via `/mcp__claude-cache__*`
+  - `/cache_query` - Instant vector search
+  - `/cache_learn` - Save successful patterns
+  - `/cache_suggest` - Proactive pattern suggestions
+  - `/cache_stats` - Knowledge base statistics
+  - `/cache_browse` - Documentation ingestion
+  - Zero context switching - everything in Claude Code
+  - Real-time pattern access without terminal
+
+### Changed
+- Added MCP server with stdio transport
+- Enhanced documentation for MCP setup
+- Updated installation with `[mcp]` optional dependency
+
+### Technical
+- New module: `complete_mcp.py` with full MCP server implementation
+- MCP tools with async/await support
+- Integration with Claude Code via `.claude.json` configuration
+
 ## [0.5.0] - 2025-01-21
 
 ### Added
@@ -163,6 +207,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v0.6.1** - Production fix: Stable MCP server with FastMCP pattern
+- **v0.6.0** - MCP integration: Native Claude Code tools with 5 slash commands
 - **v0.5.0** - Hybrid search: Vector embeddings with graceful TF-IDF fallback
 - **v0.4.0** - Intelligence trilogy: Error learning, efficiency tracking, cross-project transfer
 - **v0.3.0** - Semantic understanding: Intent detection and execution monitoring
@@ -170,12 +216,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **v0.1.0** - Foundation: Core log processing and pattern detection
 
 ## Upcoming (Planned)
-
-### v0.6.0 (Planned)
-- Real-time implicit feedback detection
-- Memory expiration and cleanup
-- Pattern deduplication
-- FAISS integration for large-scale vector search
 
 ### v0.7.0 (Planned)
 - Async processing pipeline

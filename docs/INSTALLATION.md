@@ -108,7 +108,7 @@ pip install claude-cache[mcp]
      "mcpServers": {
        "claude-cache": {
          "type": "stdio",
-         "command": "cache-mcp"
+         "command": "cache-mcp-fast"
        }
      }
    }
@@ -120,7 +120,7 @@ pip install claude-cache[mcp]
      "mcpServers": {
        "claude-cache": {
          "type": "stdio",
-         "command": "cache-mcp"
+         "command": "cache-mcp-fast"
        }
      }
    }
@@ -221,7 +221,7 @@ cache --version
 python -c "import sentence_transformers; print('✅ Enhanced search available')"
 
 # Test MCP server (if installed)
-cache-mcp --version
+cache-mcp-fast --version
 ```
 
 ---
@@ -293,7 +293,7 @@ python -c "from sentence_transformers import SentenceTransformer; SentenceTransf
 claude-code --mcp-debug
 
 # Test MCP server directly
-cache-mcp
+cache-mcp-fast
 
 # Check configuration
 cat .claude.json

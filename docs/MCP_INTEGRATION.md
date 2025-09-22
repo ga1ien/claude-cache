@@ -2,7 +2,7 @@
 
 ## Native Claude Code Tools for Lightning-Fast Development
 
-Version 0.6.0 introduces **MCP (Model Context Protocol)** integration, making Claude Cache tools available directly in Claude Code as native slash commands!
+Version 0.6.1 introduces **MCP (Model Context Protocol)** integration, making Claude Cache tools available directly in Claude Code as native slash commands!
 
 ## 🎯 What This Means
 
@@ -52,12 +52,12 @@ Arguments:
 - project: (optional) Specific project stats
 ```
 
-### `/mcp__claude-cache__inject`
-**Context Injection** - Load specific patterns into CLAUDE.md
+### `/mcp__claude-cache__browse`
+**Documentation Ingestion** - Index documentation and websites
 ```
 Arguments:
-- pattern_ids: List of patterns
-- category: Or category to inject
+- url: Documentation URL to index
+- project: (optional) Project name
 ```
 
 ## 🔧 Setup (One-Time)
@@ -77,7 +77,7 @@ Add to your project's `.claude.json`:
   "mcpServers": {
     "claude-cache": {
       "type": "stdio",
-      "command": "cache-mcp",
+      "command": "cache-mcp-fast",
       "args": [],
       "env": {}
     }
@@ -91,7 +91,7 @@ Or globally in `~/.claude/claude_desktop_config.json`:
   "mcpServers": {
     "claude-cache": {
       "type": "stdio",
-      "command": "cache-mcp",
+      "command": "cache-mcp-fast",
       "args": [],
       "env": {}
     }
@@ -173,8 +173,8 @@ claude-code --mcp-debug
 
 2. Test MCP server directly:
 ```bash
-cache-mcp
-# Should output: "MCP Server initialized"
+cache-mcp-fast
+# Should start without errors
 ```
 
 3. Verify config:
@@ -201,6 +201,6 @@ cat .claude.json
 
 ---
 
-**Claude Cache v0.6.0** - Making AI coding faster, smarter, and more intuitive!
+**Claude Cache v0.6.1** - Making AI coding faster, smarter, and more intuitive!
 
 Need help? Check `/mcp__claude-cache__stats` to see your knowledge base status.
