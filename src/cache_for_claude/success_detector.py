@@ -4,6 +4,8 @@ import re
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from rich.console import Console
+from .intent_detector import IntentDetector
+from .execution_monitor import ExecutionMonitor
 
 console = Console()
 
@@ -19,17 +21,27 @@ class SuccessDetector:
             'user_satisfaction': ['thanks', 'perfect', 'great', 'awesome', 'exactly']
         }
 
+        # Initialize semantic intent detector
+        self.intent_detector = IntentDetector()
+
+        # Initialize execution monitor
+        self.execution_monitor = ExecutionMonitor()
+
     def analyze_session_success(self, session_entries: List[Dict]) -> Dict:
         """Determine if a session was successful and extract patterns"""
         if not session_entries:
             return {'success': False, 'score': 0, 'pattern': None}
+
+        # Analyze execution signals
+        execution_success = self.analyze_execution_signals(session_entries)
 
         indicators = {
             'tests_passed': self.check_test_success(session_entries),
             'no_errors': self.check_for_errors(session_entries),
             'files_modified': self.count_successful_edits(session_entries),
             'user_satisfied': self.detect_user_satisfaction(session_entries),
-            'task_completed': self.check_task_completion(session_entries)
+            'task_completed': self.check_task_completion(session_entries),
+            'execution_success': execution_success
         }
 
         score = self.calculate_success_score(indicators)
@@ -51,7 +63,20 @@ class SuccessDetector:
         }
 
     def check_test_success(self, entries: List[Dict]) -> bool:
-        """Check if tests passed in the session"""
+        """Check if tests passed in the session using execution monitoring"""
+        # Check execution signals from bash commands
+        for entry in entries:
+            if entry.get('type') == 'tool_call' and entry.get('tool') == 'Bash':
+                command = entry.get('args', {}).get('command', '')
+                output = entry.get('output', '')
+
+                if output:
+                    signals = self.execution_monitor.analyze_output(output, command)
+                    for signal in signals:
+                        if signal.signal_type == 'test_pass' and signal.confidence > 0.7:
+                            return True
+
+        # Fallback to keyword detection
         for entry in entries:
             content = str(entry.get('content', '')).lower()
 
@@ -94,7 +119,22 @@ class SuccessDetector:
         return successful_edits
 
     def detect_user_satisfaction(self, entries: List[Dict]) -> bool:
-        """Detect if the user was satisfied with the result"""
+        """Detect if the user was satisfied with the result using semantic analysis"""
+        # Analyze the conversation flow for semantic intent
+        conversation = []
+        for entry in entries:
+            if entry.get('type') in ['user_message', 'assistant_message']:
+                conversation.append({
+                    'role': 'user' if entry.get('type') == 'user_message' else 'assistant',
+                    'content': entry.get('content', '')
+                })
+
+        # Use semantic analysis
+        if conversation:
+            analysis = self.intent_detector.analyze_conversation_flow(conversation)
+            return analysis.get('overall_intent') == 'positive' and analysis.get('confidence', 0) > 0.6
+
+        # Fallback to keyword matching
         for entry in reversed(entries):
             if entry.get('type') == 'user_message':
                 content = str(entry.get('content', '')).lower()
@@ -119,11 +159,12 @@ class SuccessDetector:
     def calculate_success_score(self, indicators: Dict[str, Any]) -> float:
         """Calculate overall success score"""
         weights = {
-            'tests_passed': 0.3,
-            'no_errors': 0.25,
-            'files_modified': 0.15,
+            'tests_passed': 0.25,
+            'no_errors': 0.2,
+            'files_modified': 0.1,
             'user_satisfied': 0.2,
-            'task_completed': 0.1
+            'task_completed': 0.1,
+            'execution_success': 0.15
         }
 
         score = 0
@@ -133,6 +174,8 @@ class SuccessDetector:
                     score += weights[key] if value else 0
                 elif isinstance(value, int):
                     score += weights[key] * min(value / 5, 1)
+                elif isinstance(value, float):
+                    score += weights[key] * value
 
         return score
 
@@ -267,3 +310,23 @@ class SuccessDetector:
                 operations.append(operation)
 
         return operations
+
+    def analyze_execution_signals(self, entries: List[Dict]) -> float:
+        """Analyze execution signals from command outputs"""
+        all_signals = []
+
+        for entry in entries:
+            if entry.get('type') == 'tool_call' and entry.get('tool') == 'Bash':
+                command = entry.get('args', {}).get('command', '')
+                output = entry.get('output', '')
+
+                if output:
+                    signals = self.execution_monitor.analyze_output(output, command)
+                    all_signals.extend(signals)
+
+        if not all_signals:
+            return 0.0
+
+        # Calculate overall success from signals
+        success, confidence = self.execution_monitor.calculate_overall_success(all_signals)
+        return confidence if success else 0.0
