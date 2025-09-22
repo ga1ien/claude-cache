@@ -309,7 +309,8 @@ class VectorSearchEngine:
         # Fit vectorizer if we have data
         if self.corpus:
             self.vectorizer.fit(self.corpus)
-            console.print(f"[dim]Loaded {len(self.corpus)} patterns for search[/dim]")
+            if not self.silent:
+                console.print(f"[dim]Loaded {len(self.corpus)} patterns for search[/dim]")
 
     def get_capabilities(self) -> Dict[str, Any]:
         """Get current search capabilities"""
