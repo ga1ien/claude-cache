@@ -29,7 +29,26 @@ class LogEntry:
         path = Path(self.source_file)
         if path.parent.name == 'projects':
             return 'unknown'
-        return path.parent.name
+
+        # Clean up directory-based project names
+        raw_name = path.parent.name
+
+        # Remove common prefixes like "-Users-username-Development-"
+        if raw_name.startswith('-Users-'):
+            # Extract just the actual project name
+            parts = raw_name.split('-')
+            # Find where "Development" or similar folder ends
+            for i, part in enumerate(parts):
+                if part in ['Development', 'Documents', 'Projects', 'Code', 'Work']:
+                    # Return everything after the common folder
+                    if i + 1 < len(parts):
+                        return '-'.join(parts[i+1:])
+            # If no common folder found, take last meaningful part
+            meaningful_parts = [p for p in parts if p and p not in ['Users', '']]
+            if len(meaningful_parts) > 2:
+                return meaningful_parts[-1]
+
+        return raw_name
 
     def is_user_message(self) -> bool:
         return self.type == 'user_message'
@@ -151,9 +170,11 @@ class LogProcessor:
                 self.state_tracker.save_state()
 
         except FileNotFoundError:
-            console.print(f"[yellow]File not found (may have been deleted): {Path(file_path).name}[/yellow]")
+            # Silently skip - file may have been deleted between scanning and processing
+            pass
         except PermissionError:
-            console.print(f"[yellow]Permission denied: {Path(file_path).name}[/yellow]")
+            console.print(f"[yellow]Permission denied reading: {Path(file_path).name}[/yellow]")
+            console.print("[dim]Check file permissions or run with appropriate access[/dim]")
         except Exception as e:
             console.print(f"[red]Unexpected error processing {Path(file_path).name}: {str(e)[:100]}[/red]")
             # Continue processing other files even if one fails

@@ -54,6 +54,7 @@ class CacheAgent:
         if not self.first_run_check_done:
             self._check_first_run()
 
+        # ALWAYS process existing logs to catch new entries
         console.print("[blue]Processing existing logs...[/blue]")
         self.process_existing_logs()
 
@@ -64,6 +65,16 @@ class CacheAgent:
     def process_existing_logs(self):
         """Process all existing log files with progress tracking"""
         try:
+            # First, count how many logs we have
+            projects_dir = Path.home() / '.claude' / 'projects'
+            log_count = len(list(projects_dir.glob('**/*.jsonl'))) if projects_dir.exists() else 0
+
+            if log_count == 0:
+                console.print("[yellow]No Claude Code conversation logs found yet.[/yellow]")
+                console.print("[dim]Logs are created when you use Claude Code in Cursor/VS Code[/dim]")
+                console.print("[dim]They are stored in: ~/.claude/projects/[/dim]\n")
+                return
+
             with Progress(
                 SpinnerColumn(),
                 TextColumn("[progress.description]{task.description}"),
@@ -74,7 +85,7 @@ class CacheAgent:
             ) as progress:
 
                 # Process existing logs
-                task = progress.add_task("[cyan]Processing existing logs...", total=100)
+                task = progress.add_task(f"[cyan]Processing {log_count} log files...", total=100)
                 self.watcher.process_existing_logs()
                 progress.update(task, advance=30)
 
@@ -359,17 +370,31 @@ class CacheAgent:
     def generate_status_table(self):
         """Generate a status table for live display"""
         stats = self.kb.get_statistics()
+        patterns = stats.get('total_patterns', 0)
+        projects = stats.get('projects', 0)
 
-        table = Table(title="Claude Cache - Live Status", show_header=True)
-        table.add_column("Metric", style="cyan")
-        table.add_column("Value", style="green")
+        table = Table(title="🧠 Claude Cache - Live Monitoring", show_header=True, border_style="dim")
+        table.add_column("Metric", style="cyan", width=20)
+        table.add_column("Value", style="green", width=15)
+        table.add_column("Status", style="yellow", width=30)
 
-        table.add_row("Patterns", str(stats.get('total_patterns', 0)))
-        table.add_row("Projects", str(stats.get('projects', 0)))
-        table.add_row("Requests", str(stats.get('total_requests', 0)))
-        table.add_row("Status", "[green]● Monitoring[/green]")
+        table.add_row("Patterns Learned", str(patterns), self._get_pattern_status(patterns))
+        table.add_row("Projects Tracked", str(projects), f"From ~/.claude/projects/")
+        table.add_row("Monitoring", "[green]● Active[/green]", f"Watching for changes...")
+        table.add_row("Last Check", datetime.now().strftime('%H:%M:%S'), "Press Ctrl+C to stop")
 
         return table
+
+    def _get_pattern_status(self, count: int) -> str:
+        """Get encouraging status message based on pattern count"""
+        if count == 0:
+            return "Keep using Claude Code!"
+        elif count < 10:
+            return "Building knowledge... 🌱"
+        elif count < 50:
+            return "Growing nicely! 🌳"
+        else:
+            return "Rich knowledge base! 🏆"
 
     def query_patterns(self, query: str, project: Optional[str] = None):
         """Query all indexed content using unified search"""
@@ -463,7 +488,7 @@ class CacheAgent:
             self.first_run_check_done = True
             return
 
-        # Check if knowledge base is empty
+        # Check if knowledge base is completely empty
         stats = self.kb.get_statistics()
         doc_stats = self._get_documentation_statistics()
 
@@ -472,9 +497,9 @@ class CacheAgent:
         has_requests = stats.get('total_requests', 0) > 0
         has_docs = doc_stats['total_docs'] > 0
 
-        # Skip first-run if we have any existing data
+        # If we have any data, don't show first-run prompt
+        # But still allow log processing to continue
         if has_patterns or has_requests or has_docs:
-            console.print(f"[dim]Found existing data: {doc_stats['total_docs']} docs, {stats.get('total_patterns', 0)} patterns[/dim]")
             # Create flag file to skip future first-run checks
             first_run_flag.touch()
             self.first_run_check_done = True

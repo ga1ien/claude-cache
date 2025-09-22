@@ -129,18 +129,18 @@ class EnhancedSuccessDetector(SuccessDetector):
 
         # Determine success using combined signals
         # High confidence if both user and execution signals agree
-        user_positive = isinstance(base_result['score'], (int, float)) and base_result['score'] > 0.6
-        execution_positive = isinstance(execution_result['score'], (int, float)) and execution_result['score'] > 0.7
+        user_positive = isinstance(base_result['score'], (int, float)) and base_result['score'] > 0.4
+        execution_positive = isinstance(execution_result['score'], (int, float)) and execution_result['score'] > 0.5
 
         if user_positive and execution_positive:
             # Both signals agree - high confidence
             base_result['success'] = True
             base_result['confidence'] = 'high'
-        elif execution_positive and enhanced_score > 0.6:
+        elif execution_positive and enhanced_score > 0.4:
             # Execution success with reasonable overall score
             base_result['success'] = True
             base_result['confidence'] = 'medium'
-        elif user_positive and enhanced_score > 0.5:
+        elif user_positive and enhanced_score > 0.3:
             # User positive with decent overall score
             base_result['success'] = True
             base_result['confidence'] = 'medium'

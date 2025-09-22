@@ -96,20 +96,28 @@ class LogWatcher:
     def process_existing_logs(self):
         """Process all existing log files"""
         if not self.claude_projects_dir.exists():
-            console.print(f"[yellow]No Claude projects directory found at {self.claude_projects_dir}[/yellow]")
+            console.print(f"[yellow]Claude projects directory not found at {self.claude_projects_dir}[/yellow]")
+            console.print("[yellow]Creating directory for future logs...[/yellow]")
+            self.claude_projects_dir.mkdir(parents=True, exist_ok=True)
             return
 
         log_files = list(self.claude_projects_dir.glob('**/*.jsonl'))
 
         if not log_files:
-            console.print("[yellow]No existing log files found[/yellow]")
+            console.print("[yellow]No existing log files found in {self.claude_projects_dir}[/yellow]")
+            console.print("[dim]Logs will be created when you use Claude Code[/dim]")
             return
 
         console.print(f"[blue]Processing {len(log_files)} existing log files...[/blue]")
 
+        processed_count = 0
         for log_file in log_files:
             project_name = log_file.parent.name
+            # Show progress for each file
             console.print(f"  Processing: {project_name}/{log_file.name}")
-            self.log_processor.process_file(str(log_file))
 
-        console.print("[green]✓ Finished processing existing logs[/green]")
+            # Process the file - this will handle incremental processing
+            self.log_processor.process_file(str(log_file))
+            processed_count += 1
+
+        console.print(f"[green]✓ Finished processing {processed_count} log files[/green]")

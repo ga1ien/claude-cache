@@ -15,10 +15,12 @@ class SuccessDetector:
 
     def __init__(self):
         self.success_indicators = {
-            'test_keywords': ['passed', 'success', 'ok', '✓', 'green'],
-            'failure_keywords': ['failed', 'error', 'exception', 'traceback', 'red'],
-            'completion_keywords': ['done', 'completed', 'finished', 'works'],
-            'user_satisfaction': ['thanks', 'perfect', 'great', 'awesome', 'exactly']
+            'test_keywords': ['passed', 'success', 'ok', '✓', 'green', 'passing', 'successful'],
+            'failure_keywords': ['failed', 'error', 'exception', 'traceback', 'red', 'failing'],
+            'completion_keywords': ['done', 'completed', 'finished', 'works', 'working', 'fixed', 'resolved'],
+            'user_satisfaction': ['thanks', 'perfect', 'great', 'awesome', 'exactly', 'good',
+                                 'nice', 'excellent', 'that worked', "that's it", 'yes',
+                                 'correct', 'right', 'thank you', 'ty', 'appreciated']
         }
 
         # Initialize semantic intent detector
@@ -46,7 +48,7 @@ class SuccessDetector:
 
         score = self.calculate_success_score(indicators)
 
-        if score > 0.7:
+        if score > 0.5:  # Lowered threshold to capture more patterns
             pattern = self.extract_success_pattern(session_entries)
             return {
                 'success': True,
