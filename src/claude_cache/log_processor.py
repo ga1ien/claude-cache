@@ -165,7 +165,11 @@ class LogProcessor:
                 self.state_tracker.update_position(file_path, current_position)
 
             if entries_processed > 0:
-                console.print(f"[green]✓ Processed {entries_processed} new entries from {Path(file_path).name}[/green]")
+                # Extract project name from file path
+                project_name = self._extract_project_name(file_path)
+                # Only show messages if we're not in monitoring mode
+                if not getattr(self, 'silent_mode', False):
+                    console.print(f"[green]✓ Processed {entries_processed} new entries from {project_name}[/green]")
                 # Ensure state is saved after successful processing
                 self.state_tracker.save_state()
 
@@ -247,6 +251,29 @@ class LogProcessor:
 
         if self.kb:
             self.kb.store_response(response_data)
+
+    def _extract_project_name(self, file_path: str) -> str:
+        """Extract clean project name from file path"""
+        path = Path(file_path)
+        # Get the parent directory name (project folder)
+        project_dir = path.parent.name
+
+        # Clean up directory-based project names
+        if project_dir.startswith('-Users-'):
+            # Extract just the actual project name
+            parts = project_dir.split('-')
+            # Find where "Development" or similar folder ends
+            for i, part in enumerate(parts):
+                if part in ['Development', 'Documents', 'Projects', 'Code', 'Work']:
+                    # Return everything after the common folder
+                    if i + 1 < len(parts):
+                        return '-'.join(parts[i+1:])
+            # If no common folder found, take last meaningful part
+            meaningful_parts = [p for p in parts if p and p not in ['Users', '']]
+            if meaningful_parts:
+                return meaningful_parts[-1]
+
+        return project_dir
 
     def classify_request(self, content: str) -> str:
         """Classify the type of user request"""

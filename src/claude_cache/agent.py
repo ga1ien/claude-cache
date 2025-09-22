@@ -55,13 +55,16 @@ class CacheAgent:
         if not self.first_run_check_done:
             self._check_first_run()
 
-        # ALWAYS process existing logs to catch new entries
-        console.print("[blue]Processing existing logs...[/blue]")
-        self.process_existing_logs()
-
         if watch:
+            # For monitoring mode, do a quick silent check instead of full processing
+            self.processor.silent_mode = True
+            self.watcher.process_existing_logs()
             console.print("[blue]Starting real-time monitoring...[/blue]")
             self.start_monitoring()
+        else:
+            # Full processing for non-watch mode
+            console.print("[blue]Processing existing logs...[/blue]")
+            self.process_existing_logs()
 
     def process_existing_logs(self):
         """Process all existing log files with progress tracking"""
@@ -116,6 +119,9 @@ class CacheAgent:
 
     def start_monitoring(self):
         """Start real-time log monitoring with context updates"""
+        # Enable silent mode for log processor to suppress messages
+        self.processor.silent_mode = True
+
         # Start real-time context updates
         self.realtime_updater.start()
 
