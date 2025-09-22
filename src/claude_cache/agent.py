@@ -47,6 +47,9 @@ class CacheAgent:
             border_style="cyan"
         ))
 
+        # Check vector search capabilities
+        self._check_vector_capabilities()
+
         # Check for first run and offer to scan existing documentation
         if not self.first_run_check_done:
             self._check_first_run()
@@ -369,29 +372,50 @@ class CacheAgent:
         return table
 
     def query_patterns(self, query: str, project: Optional[str] = None):
-        """Query patterns from the knowledge base"""
-        if project:
-            patterns = self.kb.find_similar_patterns(query, project)
-        else:
-            all_patterns = []
-            for proj in self.get_projects():
-                all_patterns.extend(self.kb.find_similar_patterns(query, proj))
+        """Query all indexed content using unified search"""
+        # Use unified search that includes both patterns and documentation
+        results = self.kb.unified_search(query, project, limit=10)
 
-            patterns = sorted(all_patterns, key=lambda x: x['similarity'], reverse=True)[:10]
-
-        if not patterns:
-            console.print("[yellow]No patterns found[/yellow]")
+        if not results:
+            console.print("[yellow]No results found[/yellow]")
             return
 
-        for i, pattern in enumerate(patterns, 1):
-            console.print(Panel(
-                f"[bold]Pattern {i}[/bold]\n"
-                f"Request: {pattern['request'][:100]}\n"
-                f"Approach: {pattern['approach']}\n"
-                f"Similarity: {pattern['similarity']:.1%}\n"
-                f"Success: {pattern['success_score']:.1%}",
-                expand=False
-            ))
+        # Display results beautifully
+        from rich.table import Table
+
+        table = Table(title=f"Search Results for: '{query}'", show_lines=True)
+        table.add_column("#", style="cyan", width=4)
+        table.add_column("Type", style="yellow", width=12)
+        table.add_column("Content", style="white", width=70)
+        table.add_column("Match", style="green", width=8)
+
+        for i, result in enumerate(results, 1):
+            # Format type with emoji
+            content_type = result['type']
+            if content_type == 'documentation':
+                type_display = f"📚 {result.get('doc_type', 'doc')}"
+            elif content_type == 'pattern':
+                type_display = "🧠 pattern"
+            else:
+                type_display = f"📝 {content_type}"
+
+            # Format content preview
+            content = result['content'][:100] + "..." if len(result['content']) > 100 else result['content']
+
+            # Format similarity
+            similarity = f"{result['similarity']:.1%}"
+
+            table.add_row(str(i), type_display, content, similarity)
+
+        console.print(table)
+
+        # Show search mode at the bottom
+        if results:
+            search_mode = results[0].get('search_mode', 'unknown')
+            if search_mode == 'semantic':
+                console.print(f"\n[dim]✨ Using semantic search - understanding context and meaning[/dim]")
+            else:
+                console.print(f"\n[dim]📊 Using TF-IDF search - matching keywords[/dim]")
 
     def export_knowledge(self, output_file: str, project: Optional[str] = None):
         """Export knowledge base to file"""
@@ -738,8 +762,22 @@ class CacheAgent:
     ║  | |__ / ___ \\| |___|  _  | |___          ║
     ║   \\___/_/   \\_\\\\____|_| |_|_____|         ║
     ║                                           ║
-    ║                v0.2.0                     ║
+    ║                v0.5.0                     ║
     ╚═══════════════════════════════════════════╝
         """
 
         console.print(Text(banner, style="bold cyan"))
+
+    def _check_vector_capabilities(self):
+        """Check and display vector search capabilities"""
+        if self.kb.vector_search:
+            capabilities = self.kb.vector_search.get_capabilities()
+
+            if capabilities['mode'] == 'semantic':
+                console.print("[green]✨ Semantic search enabled - 2x better pattern matching![/green]")
+                console.print("[green]🧠 Understanding context and meaning, not just keywords[/green]\n")
+            else:
+                console.print("[yellow]📊 Using TF-IDF search (keyword matching)[/yellow]")
+                console.print("[yellow]💡 Tip: For semantic understanding, install:[/yellow]")
+                console.print("    [cyan]pip install claude-cache[enhanced][/cyan]")
+                console.print("    [dim]This enables context-aware pattern matching[/dim]\n")

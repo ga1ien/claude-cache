@@ -9,6 +9,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from rich.console import Console
+from .vector_search import VectorSearchEngine
 
 console = Console()
 
@@ -24,7 +25,13 @@ class KnowledgeBase:
 
         self.db_path = str(db_path)
         self.setup_database()
+
+        # Initialize vector search engine (with automatic fallback)
+        self.vector_search = VectorSearchEngine(db_path)
+
+        # Keep legacy TF-IDF for backward compatibility
         self.vectorizer = TfidfVectorizer(max_features=1000)
+        self.use_vector_search = True  # Flag to enable/disable new search
 
     def setup_database(self):
         """Create database tables"""
@@ -147,10 +154,39 @@ class KnowledgeBase:
             json.dumps(pattern.get('tags', []))
         ))
 
+        pattern_id = cursor.lastrowid
         conn.commit()
         conn.close()
 
-        console.print(f"[green]✓ Stored success pattern for {project_name}[/green]")
+        # Add to vector search index if available
+        if self.use_vector_search and self.vector_search:
+            try:
+                # Create searchable text from pattern
+                search_text = pattern.get('user_request', '')
+                if pattern.get('approach'):
+                    search_text += f" {pattern['approach']}"
+
+                # Store metadata for later retrieval
+                metadata = {
+                    'type': 'pattern',  # Important for unified search
+                    'project': project_name,
+                    'success_score': success_score,
+                    'request_type': pattern.get('request_type', 'unknown'),
+                    'timestamp': pattern.get('timestamp', datetime.now().isoformat())
+                }
+
+                # Add to vector index
+                self.vector_search.add_pattern(
+                    text=search_text,
+                    pattern_id=f"pattern_{pattern_id}",
+                    metadata=metadata
+                )
+
+                console.print(f"[green]✓ Stored and indexed pattern for {project_name}[/green]")
+            except Exception as e:
+                console.print(f"[yellow]Pattern stored but indexing failed: {str(e)}[/yellow]")
+        else:
+            console.print(f"[green]✓ Stored success pattern for {project_name}[/green]")
 
     def store_request(self, request_data: Dict):
         """Store a user request"""
@@ -212,7 +248,61 @@ class KnowledgeBase:
         conn.close()
 
     def find_similar_patterns(self, current_request: str, project_name: str, threshold: float = 0.3) -> List[Dict]:
-        """Find similar successful patterns"""
+        """Find similar successful patterns using hybrid vector search"""
+        # Try vector search first if available
+        if self.use_vector_search and self.vector_search:
+            try:
+                # Use the vector search engine for better results
+                vector_results = self.vector_search.search(
+                    query=current_request,
+                    limit=10,
+                    project=project_name
+                )
+
+                # Convert vector search results to expected format
+                similar_patterns = []
+                for result in vector_results:
+                    if result['similarity'] > threshold:
+                        # Fetch full pattern data from database
+                        conn = sqlite3.connect(self.db_path)
+                        cursor = conn.cursor()
+
+                        pattern_id = result.get('pattern_id', '')
+                        # Try to extract numeric ID from pattern_id
+                        try:
+                            numeric_id = int(pattern_id.split('_')[-1]) if '_' in pattern_id else int(pattern_id)
+                        except:
+                            numeric_id = pattern_id
+
+                        cursor.execute('''
+                            SELECT id, user_request, approach, solution_steps, success_score,
+                                   files_involved, key_operations
+                            FROM success_patterns
+                            WHERE id = ? OR user_request = ?
+                        ''', (numeric_id, result.get('text', '')))
+
+                        pattern_data = cursor.fetchone()
+                        conn.close()
+
+                        if pattern_data:
+                            similar_patterns.append({
+                                'id': pattern_data[0],
+                                'request': pattern_data[1],
+                                'approach': pattern_data[2],
+                                'solution_steps': json.loads(pattern_data[3]) if pattern_data[3] else [],
+                                'files_involved': json.loads(pattern_data[5]) if pattern_data[5] else [],
+                                'key_operations': json.loads(pattern_data[6]) if pattern_data[6] else [],
+                                'success_score': pattern_data[4],
+                                'similarity': result['similarity'],
+                                'search_mode': result.get('search_mode', 'unknown')
+                            })
+
+                if similar_patterns:
+                    return sorted(similar_patterns, key=lambda x: x['similarity'], reverse=True)[:5]
+            except Exception as e:
+                console.print(f"[yellow]Vector search failed, falling back to TF-IDF: {str(e)}[/yellow]")
+
+        # Fallback to legacy TF-IDF search
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
@@ -249,7 +339,8 @@ class KnowledgeBase:
                     'files_involved': json.loads(files) if files else [],
                     'key_operations': json.loads(operations) if operations else [],
                     'success_score': score,
-                    'similarity': similarities[i]
+                    'similarity': similarities[i],
+                    'search_mode': 'tfidf'
                 })
 
         return sorted(similar_patterns, key=lambda x: x['similarity'], reverse=True)[:5]
@@ -402,6 +493,48 @@ class KnowledgeBase:
         finally:
             conn.close()
 
+        # Automatically index documentation into vector search if available
+        if self.use_vector_search and self.vector_search:
+            try:
+                import json
+                doc_data = json.loads(content)
+
+                # Create searchable text from lessons, warnings, etc.
+                search_text_parts = []
+
+                if 'lessons' in doc_data:
+                    search_text_parts.extend(doc_data['lessons'])
+
+                if 'warnings' in doc_data:
+                    search_text_parts.extend(doc_data['warnings'])
+
+                if 'best_practices' in doc_data:
+                    search_text_parts.extend(doc_data['best_practices'])
+
+                if 'architecture' in doc_data:
+                    search_text_parts.append(doc_data['architecture'])
+
+                # Combine all text
+                search_text = " ".join(search_text_parts)
+
+                if search_text.strip():
+                    # Add to vector search index
+                    pattern_id = f"doc_{project_name}_{file_path}".replace("/", "_").replace(" ", "_")[:100]
+
+                    self.vector_search.add_pattern(
+                        text=search_text,
+                        pattern_id=pattern_id,
+                        metadata={
+                            'type': 'documentation',
+                            'project': project_name,
+                            'file_path': file_path,
+                            'doc_type': doc_type
+                        }
+                    )
+            except Exception as e:
+                # Don't fail if indexing fails, just log it
+                console.print(f"[dim]Could not index documentation: {str(e)}[/dim]")
+
     def search_documentation(self, query: str, project_name: Optional[str] = None,
                            limit: int = 10) -> List[Dict[str, Any]]:
         """Search through stored documentation"""
@@ -461,6 +594,52 @@ class KnowledgeBase:
 
         finally:
             conn.close()
+
+    def unified_search(self, query: str, project_name: Optional[str] = None,
+                       limit: int = 10) -> List[Dict[str, Any]]:
+        """Unified search across all content: patterns, documentation, everything"""
+        if self.use_vector_search and self.vector_search:
+            # Use vector search for everything
+            results = self.vector_search.search(
+                query=query,
+                limit=limit,
+                project=project_name
+            )
+
+            # Enrich results with additional metadata
+            enriched_results = []
+            for result in results:
+                metadata = result.get('metadata', {})
+                content_type = metadata.get('type', 'unknown')
+
+                enriched_result = {
+                    'type': content_type,
+                    'content': result.get('text', ''),
+                    'similarity': result.get('similarity', 0),
+                    'project': metadata.get('project', ''),
+                    'search_mode': result.get('search_mode', 'unknown')
+                }
+
+                # Add type-specific fields
+                if content_type == 'documentation':
+                    enriched_result['file_path'] = metadata.get('file_path', '')
+                    enriched_result['doc_type'] = metadata.get('doc_type', '')
+                elif content_type == 'pattern':
+                    enriched_result['pattern_id'] = result.get('pattern_id', '')
+
+                enriched_results.append(enriched_result)
+
+            return enriched_results
+        else:
+            # Fallback to pattern search only (legacy)
+            patterns = self.find_similar_patterns(query, project_name or 'unknown', 0.1)
+            return [{
+                'type': 'pattern',
+                'content': p.get('request', ''),
+                'similarity': p.get('similarity', 0),
+                'project': project_name or '',
+                'search_mode': 'tfidf'
+            } for p in patterns[:limit]]
 
     def get_documentation_for_context(self, project_name: str) -> List[Dict[str, Any]]:
         """Get relevant documentation for context injection"""

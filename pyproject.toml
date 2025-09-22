@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "claude-cache"
-version = "0.4.0"
-description = "Claude Cache - Intelligent memory system for AI coding with error learning, efficiency tracking, and cross-project intelligence"
+version = "0.6.0"
+description = "Claude Cache - Intelligent memory system for AI coding with MCP integration, hybrid vector search, and proactive pattern suggestions"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -44,6 +44,16 @@ dev = [
     "isort>=5.0.0",
     "mypy>=1.0.0",
 ]
+enhanced = [
+    "sentence-transformers>=2.2.0",
+]
+mcp = [
+    "mcp>=1.14.0",
+]
+all = [
+    "sentence-transformers>=2.2.0",
+    "mcp>=1.14.0",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/ga1ien/claude-cache"
@@ -51,7 +61,8 @@ dev = [
 "Source" = "https://github.com/ga1ien/claude-cache"
 
 [project.scripts]
-cache = "cache_for_claude.cli:main"
+cache = "claude_cache.cli:main"
+cache-mcp = "claude_cache.complete_mcp:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

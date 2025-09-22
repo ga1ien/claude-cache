@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "claude-cache": {
+      "type": "stdio",
+      "command": "cache-mcp",
+      "args": [],
+      "env": {}
+    }
+  }
+}

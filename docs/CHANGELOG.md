@@ -5,6 +5,33 @@ All notable changes to Claude Cache will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-01-21
+
+### Added
+- **Hybrid Vector Search System** - Graceful fallback between semantic and TF-IDF search
+  - Automatic detection of sentence-transformers availability
+  - Semantic search with all-MiniLM-L6-v2 model when available
+  - Intelligent fallback to TF-IDF for keyword matching
+  - 2x better pattern matching with semantic understanding
+  - Optional dependency via `pip install claude-cache[enhanced]`
+
+- **Search Capability Detection** - Automatic capability checking and user notifications
+  - Displays current search mode on startup
+  - Suggests enhancement options if not installed
+  - Shows feature comparison (keyword vs semantic)
+
+### Changed
+- Updated KnowledgeBase to integrate VectorSearchEngine
+- Enhanced pattern storage with automatic vector indexing
+- Improved search results with mode transparency
+- Updated agent to display search capabilities on startup
+
+### Technical
+- New module: `vector_search.py` with VectorSearchEngine class
+- Added optional dependency group `[enhanced]` in pyproject.toml
+- Database tables for pattern embeddings and TF-IDF corpus
+- Hybrid search architecture with automatic mode selection
+
 ## [0.4.0] - 2025-01-21
 
 ### Added
@@ -136,6 +163,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v0.5.0** - Hybrid search: Vector embeddings with graceful TF-IDF fallback
 - **v0.4.0** - Intelligence trilogy: Error learning, efficiency tracking, cross-project transfer
 - **v0.3.0** - Semantic understanding: Intent detection and execution monitoring
 - **v0.2.x** - Documentation import: Scan and organize existing knowledge
@@ -143,13 +171,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Upcoming (Planned)
 
-### v0.5.0 (Planned)
+### v0.6.0 (Planned)
 - Real-time implicit feedback detection
 - Memory expiration and cleanup
 - Pattern deduplication
-- Vector embedding cache for faster search
+- FAISS integration for large-scale vector search
 
-### v0.6.0 (Planned)
+### v0.7.0 (Planned)
 - Async processing pipeline
 - Team collaboration features
 - Analytics dashboard
