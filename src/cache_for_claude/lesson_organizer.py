@@ -150,7 +150,7 @@ class LessonOrganizer:
         """Create a single file for a category"""
         file_path = self.lessons_dir / f"{category}_lessons.md"
 
-            content_lines = [
+        content_lines = [
                 f"# {category.title()} Lessons - {project_name}",
                 f"*Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}*",
                 "",
