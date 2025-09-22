@@ -13,9 +13,16 @@ console = Console()
 class ContextInjector:
     """Generate context and slash commands from knowledge base"""
 
+    # Maximum size for CLAUDE.md file (in characters)
+    MAX_CONTEXT_SIZE = 50000  # ~50KB, reasonable for Claude to read
+    MAX_LESSONS_PER_DOC = 5
+    MAX_PATTERNS_IN_CONTEXT = 10
+    MAX_DOCS_IN_CONTEXT = 5
+
     def __init__(self, knowledge_base):
         self.kb = knowledge_base
         self.commands_dir = Path('.claude/commands')
+        self.lessons_dir = Path('.claude/lessons')
 
     def generate_context_for_request(self, user_request: str, project_name: str) -> Optional[str]:
         """Generate context for a specific request"""
@@ -36,10 +43,44 @@ class ContextInjector:
         context_lines = [
             f"# Project Context: {project_name}",
             f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
-            "",
-            "## Relevant Successful Patterns",
             ""
         ]
+
+        # Include manual documentation first
+        docs = self.kb.get_documentation_for_context(project_name)
+        if docs:
+            context_lines.extend([
+                "## Project Documentation & Lessons Learned",
+                ""
+            ])
+
+            for doc in docs:
+                import json
+                doc_data = json.loads(doc['content'])
+
+                context_lines.append(f"### From: {doc['file_path']}")
+
+                if doc_data.get('lessons_learned'):
+                    context_lines.append("\n**Lessons Learned:**")
+                    for lesson in doc_data['lessons_learned'][:5]:
+                        context_lines.append(f"- {lesson}")
+
+                if doc_data.get('warnings'):
+                    context_lines.append("\n**Important Warnings:**")
+                    for warning in doc_data['warnings'][:3]:
+                        context_lines.append(f"⚠️  {warning}")
+
+                if doc_data.get('best_practices'):
+                    context_lines.append("\n**Best Practices:**")
+                    for practice in doc_data['best_practices'][:3]:
+                        context_lines.append(f"✓ {practice}")
+
+                context_lines.append("")
+
+        context_lines.extend([
+            "## Relevant Successful Patterns",
+            ""
+        ])
 
         for i, pattern in enumerate(patterns, 1):
             similarity = pattern['similarity']
@@ -312,36 +353,116 @@ Load relevant context for: $ARGUMENTS
         self.save_as_slash_command('\n'.join(content_lines), 'debug-helper', project_name)
 
     def export_commands_to_claude_md(self, project_name: str):
-        """Export patterns to a CLAUDE.md file"""
+        """Export patterns to a CLAUDE.md file with smart length management"""
+        # Use the new lesson organizer for better structure
+        from .lesson_organizer import LessonOrganizer
+
+        organizer = LessonOrganizer(self.kb)
+
+        # Organize lessons into categories
+        categorized_lessons = organizer.organize_lessons_by_category(project_name)
+
+        # The organizer creates the main CLAUDE.md with intelligent references
+        # So we just need to add recent patterns to it
+        self._append_recent_patterns_to_index(project_name)
+
+        return
+
+    def export_commands_to_claude_md_old(self, project_name: str):
+        """Legacy export method - kept for reference"""
+        # Include both auto-learned patterns and manual documentation
         claude_md_path = Path('.claude') / 'CLAUDE.md'
         claude_md_path.parent.mkdir(exist_ok=True)
 
         stats = self.kb.get_statistics(project_name)
-        patterns = self.kb.find_similar_patterns('', project_name)[:10]
+        patterns = self.kb.find_similar_patterns('', project_name)[:self.MAX_PATTERNS_IN_CONTEXT]
 
         content_lines = [
             f"# Claude Code Knowledge Base for {project_name}",
             "",
             f"*Auto-generated from {stats.get('patterns', 0)} successful patterns*",
-            "",
+            ""
+        ]
+
+        # Add manual documentation section first (prioritized)
+        docs = self.kb.get_documentation_for_context(project_name)
+        if docs:
+            content_lines.extend([
+                "## 📚 Project Documentation & Lessons Learned",
+                "",
+                "*From your existing documentation files:*",
+                ""
+            ])
+
+            # Limit to MAX_DOCS_IN_CONTEXT most relevant docs
+            for doc in docs[:self.MAX_DOCS_IN_CONTEXT]:
+                import json
+                doc_data = json.loads(doc['content'])
+
+                content_lines.append(f"### {doc['file_path']}")
+
+                # Prioritize warnings first (most important)
+                if doc_data.get('warnings'):
+                    content_lines.append("\n**⚠️  Critical Warnings:**")
+                    for warning in doc_data['warnings'][:3]:
+                        # Truncate long warnings
+                        warning_text = warning[:200] + "..." if len(warning) > 200 else warning
+                        content_lines.append(f"- {warning_text}")
+
+                # Then lessons learned
+                if doc_data.get('lessons_learned'):
+                    content_lines.append("\n**Key Lessons:**")
+                    for lesson in doc_data['lessons_learned'][:self.MAX_LESSONS_PER_DOC]:
+                        lesson_text = lesson[:150] + "..." if len(lesson) > 150 else lesson
+                        content_lines.append(f"- {lesson_text}")
+
+                # Best practices last
+                if doc_data.get('best_practices'):
+                    content_lines.append("\n**Best Practices:**")
+                    for practice in doc_data['best_practices'][:2]:
+                        practice_text = practice[:150] + "..." if len(practice) > 150 else practice
+                        content_lines.append(f"✓ {practice_text}")
+
+                content_lines.append("")
+
+                # Check if we're approaching size limit
+                current_size = len('\n'.join(content_lines))
+                if current_size > self.MAX_CONTEXT_SIZE * 0.4:  # Use 40% for docs
+                    content_lines.append("*[Additional documentation truncated for size...]*")
+                    break
+
+        content_lines.extend([
             "## Project Overview",
             "",
             f"- Total Patterns: {stats.get('patterns', 0)}",
             f"- Conventions: {stats.get('conventions', 0)}",
             f"- Analyzed Requests: {stats.get('requests', 0)}",
+            f"- Documentation Files: {len(docs) if docs else 0}",
             "",
             "## Key Success Patterns",
             ""
-        ]
+        ])
 
-        for i, pattern in enumerate(patterns[:5], 1):
+        # Add patterns with size management
+        patterns_added = 0
+        for i, pattern in enumerate(patterns, 1):
+            # Check current size before adding more patterns
+            current_size = len('\n'.join(content_lines))
+            if current_size > self.MAX_CONTEXT_SIZE * 0.8:  # Leave 20% buffer
+                content_lines.append(f"*[{len(patterns) - patterns_added} additional patterns available via slash commands]*")
+                break
+
             content_lines.extend([
                 f"### Pattern {i}",
-                f"- **Request:** {pattern['request'][:100]}",
-                f"- **Approach:** {pattern['approach']}",
+                f"- **Request:** {pattern['request'][:100]}...",
+                f"- **Approach:** {pattern['approach'][:80]}",
                 f"- **Success Score:** {pattern['success_score']:.1%}",
                 ""
             ])
+            patterns_added += 1
+
+            if patterns_added >= 5:  # Limit to top 5 patterns in main context
+                break
 
         content_lines.extend([
             "## Usage",
@@ -357,7 +478,99 @@ Load relevant context for: $ARGUMENTS
             ""
         ])
 
+        # Final size check and write
+        final_content = '\n'.join(content_lines)
+
+        if len(final_content) > self.MAX_CONTEXT_SIZE:
+            # Truncate and add notice
+            final_content = final_content[:self.MAX_CONTEXT_SIZE - 200]
+            final_content += "\n\n---\n*[Content truncated. Use slash commands for full access to patterns]*"
+
+            # Create overflow file for additional patterns
+            overflow_path = claude_md_path.parent / 'CLAUDE_EXTENDED.md'
+            self._create_overflow_document(overflow_path, patterns[5:], project_name)
+
         with open(claude_md_path, 'w') as f:
-            f.write('\n'.join(content_lines))
+            f.write(final_content)
 
         console.print(f"[green]✓ Exported to {claude_md_path}[/green]")
+
+        if len(final_content) > self.MAX_CONTEXT_SIZE * 0.9:
+            console.print(f"[yellow]Note: Document approaching size limit. Older patterns moved to slash commands.[/yellow]")
+
+    def _create_overflow_document(self, path: Path, patterns: List[Dict], project_name: str):
+        """Create overflow document for patterns that don't fit in main CLAUDE.md"""
+        content_lines = [
+            f"# Extended Patterns for {project_name}",
+            "",
+            "*Additional patterns that don't fit in the main context file*",
+            "",
+            "Access these via slash commands:",
+            "- `/project-context [task]` - Search all patterns",
+            "- `/best-practices` - View successful approaches",
+            ""
+        ]
+
+        for i, pattern in enumerate(patterns[:20], 6):  # Continue numbering from 6
+            content_lines.extend([
+                f"### Pattern {i}",
+                f"- **Request:** {pattern['request'][:100]}",
+                f"- **Success Score:** {pattern['success_score']:.1%}",
+                ""
+            ])
+
+        with open(path, 'w') as f:
+            f.write('\n'.join(content_lines))
+
+    def _append_recent_patterns_to_index(self, project_name: str):
+        """Append most recent successful patterns to the main index"""
+        claude_md_path = Path('.claude') / 'CLAUDE.md'
+
+        if not claude_md_path.exists():
+            return
+
+        # Get recent high-success patterns
+        patterns = self.kb.find_similar_patterns('', project_name)
+        recent_wins = [p for p in patterns[:5] if p.get('success_score', 0) > 0.85]
+
+        if not recent_wins:
+            return
+
+        # Read existing content
+        with open(claude_md_path, 'r') as f:
+            content = f.read()
+
+        # Find where to insert recent patterns (before the statistics section)
+        insert_marker = "## 📊 Knowledge Statistics"
+        if insert_marker not in content:
+            insert_marker = "## 🔄 Auto-Learning Active"
+
+        if insert_marker in content:
+            parts = content.split(insert_marker)
+
+            recent_section = [
+                "",
+                "## 🎯 Recent Successful Patterns",
+                "",
+                "*Most recent wins from your coding sessions:*",
+                ""
+            ]
+
+            for i, pattern in enumerate(recent_wins[:3], 1):
+                recent_section.extend([
+                    f"{i}. **{pattern['request'][:60]}...**",
+                    f"   - Approach: {pattern['approach'][:80]}",
+                    f"   - Success: {pattern['success_score']:.0%}",
+                    ""
+                ])
+
+            # Reassemble content
+            new_content = parts[0] + '\n'.join(recent_section) + "\n" + insert_marker + parts[1]
+
+            # Keep under size limit
+            if len(new_content) > 35000:
+                # Trim from the middle sections
+                new_content = new_content[:34000] + "\n\n*[Content optimized for size]*\n" + insert_marker + parts[1]
+
+            with open(claude_md_path, 'w') as f:
+                f.write(new_content)

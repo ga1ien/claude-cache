@@ -27,20 +27,27 @@ You: "Perfect! The login works now" ← This triggers learning!
 
 ## Features
 
+- **First-Run Documentation Import** - Scans your entire Development folder for existing documentation
 - **Automatic Log Processing** - Monitors and processes Claude Code session logs in real-time
+- **Intelligent Lesson Organization** - Categorizes lessons by topic (auth, database, API, etc.)
+- **Smart Document Management** - Keeps CLAUDE.md under 30KB with overflow handling
 - **Success Pattern Detection** - Identifies which approaches worked well for specific tasks
-- **Context Generation** - Creates relevant context for similar future requests
+- **Context Generation** - Creates hierarchical context with category-specific files
 - **Slash Commands** - Generates Claude Code slash commands for quick access to patterns
 - **Convention Tracking** - Learns your project's coding conventions and patterns
 - **Team Knowledge Sharing** - Export and import patterns for team collaboration
+- **User Content Preservation** - Your custom notes in CLAUDE.md are never overwritten
 
 ## How It Works
 
-1. **Monitor** - Watches your Claude Code log files (`~/.claude/projects/`)
-2. **Analyze** - Detects successful patterns using multiple indicators
-3. **Store** - Builds a searchable knowledge base with SQLite
-4. **Generate** - Creates slash commands and context files
-5. **Learn** - Improves Claude's responses with personalized context
+1. **First Run** - Prompts to scan your Development folder for all existing documentation
+2. **Import** - Extracts lessons learned, warnings, and best practices from your docs
+3. **Organize** - Categories lessons into topics (authentication, database, API, etc.)
+4. **Monitor** - Watches your Claude Code log files (`~/.claude/projects/`)
+5. **Analyze** - Detects successful patterns using multiple indicators
+6. **Store** - Builds a searchable knowledge base with SQLite
+7. **Generate** - Creates intelligent index with category files in `.claude/lessons/`
+8. **Learn** - Improves Claude's responses with hierarchical context
 
 ### Multi-Project Support
 
@@ -68,6 +75,27 @@ pip install -e .
 ```
 
 ## Quick Start
+
+### First Time Setup
+
+```bash
+cache start
+```
+
+**On first run, you'll see:**
+```
+🎉 Welcome to Claude Cache!
+
+Would you like to scan for existing documentation?
+1. Scan all Claude Code projects (from logs)
+2. Scan your Development folder     [Default]
+3. Scan a custom directory
+4. Skip for now
+
+Choose an option [2]: _
+```
+
+This imports all your existing documentation, giving you an immediate knowledge base!
 
 ### Running Claude Cache
 
@@ -121,6 +149,19 @@ cache stats
 
 # Generate slash commands for a project
 cache generate --project my-project
+```
+
+### Documentation Commands
+
+```bash
+# Scan repository for documentation (lessons learned, READMEs, etc.)
+cache scan-docs /path/to/repo
+
+# Scan current directory
+cache scan-docs .
+
+# Search through indexed documentation
+cache search-docs --query "authentication" --project my-app
 ```
 
 ### Advanced Usage
@@ -247,13 +288,15 @@ claude-cache/
 ├── src/
 │   └── cache_for_claude/
 │       ├── __init__.py
-│       ├── agent.py          # Main coordination agent
-│       ├── cli.py            # Command-line interface
-│       ├── context_injector.py # Context and command generation
-│       ├── knowledge_base.py  # Database storage
-│       ├── log_processor.py   # Log parsing
-│       ├── log_watcher.py     # File monitoring
-│       └── success_detector.py # Pattern detection
+│       ├── agent.py             # Main coordination agent
+│       ├── cli.py               # Command-line interface
+│       ├── context_injector.py  # Context and command generation
+│       ├── doc_scanner.py       # Documentation scanner for imports
+│       ├── lesson_organizer.py  # Categorizes lessons by topic
+│       ├── knowledge_base.py    # Database storage
+│       ├── log_processor.py     # Log parsing
+│       ├── log_watcher.py       # File monitoring
+│       └── success_detector.py  # Pattern detection
 ├── pyproject.toml
 └── README.md
 ```
@@ -301,9 +344,28 @@ Claude Cache seamlessly handles multiple projects. Here's what happens:
 ```
 each-project/
 ├── .claude/
-│   ├── CLAUDE.md              # This project's patterns & context
-│   └── commands/              # This project's slash commands
+│   ├── CLAUDE.md              # Main index (5-10KB, Claude reads this)
+│   ├── lessons/               # Categorized lessons (unlimited)
+│   │   ├── authentication_lessons.md
+│   │   ├── database_lessons.md
+│   │   ├── api_lessons.md
+│   │   └── debugging_lessons.md
+│   └── commands/              # Slash commands for Claude Code
 ```
+
+### Intelligent Document Organization
+
+**CLAUDE.md Structure (Kept Small):**
+- Top 5 critical warnings
+- Category index with file paths
+- Instructions for Claude
+- User notes section (preserved)
+
+**Lessons Directory:**
+- Organized by topic
+- 10 lessons per priority level
+- Automatic overflow files for >40 lessons
+- Smart navigation between parts
 
 ### Managing Multiple Projects
 ```bash

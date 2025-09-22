@@ -40,8 +40,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (New Features)
+- **First-Run Documentation Scanner** - Automatically prompts to scan Development folder on first launch
+- **Batch Project Import** - Import documentation from all projects at once
+- **Intelligent Lesson Organization** - Auto-categorizes lessons by topic (auth, database, API, debugging, etc.)
+- **Hierarchical Documentation System** - Lightweight index (CLAUDE.md) + detailed category files
+- **Smart Document Length Management** - Keeps CLAUDE.md under 30KB with automatic overflow handling
+- **User Content Preservation** - Protected sections in CLAUDE.md that are never overwritten
+- **Multi-Part Category Files** - Automatic file splitting when categories exceed 40 lessons
+- **Documentation Scanner Module** - New `doc_scanner.py` for extracting lessons from existing docs
+- **Lesson Organizer Module** - New `lesson_organizer.py` for intelligent categorization
+- **CLI Documentation Commands** - `cache scan-docs` and `cache search-docs` commands
+- **Lesson Prioritization System** - Critical, High, Medium, Low priority levels with visual indicators
+- **Navigation Links** - Automatic navigation between multi-part lesson files
+- **Import Progress Display** - Shows detailed statistics immediately after scanning
+
+### Changed
+- **CLAUDE.md Structure** - Now acts as lightweight index (5-10KB) pointing to category files
+- **Context Generation** - Uses hierarchical structure with intelligent file references
+- **Statistics Display** - Enhanced to show documentation metrics alongside pattern metrics
+- **First Run Experience** - Interactive menu for choosing scan source (Development folder, custom, or skip)
+- **File Organization** - Lessons now stored in `.claude/lessons/` directory by category
+
+### Improved
+- **Scalability** - Can now handle thousands of lessons without performance degradation
+- **Organization** - Automatic topic categorization for better discoverability
+- **Claude Integration** - CLAUDE.md includes instructions for Claude on where to find specific topics
+- **Memory Efficiency** - Reduced main context size while maintaining comprehensive coverage
+- **User Experience** - Clear starting point with imported lesson counts shown immediately
+
+### Technical Details
+- Maximum 10 lessons per priority level per file
+- Maximum 8 categories shown in main index
+- Top 5 critical warnings displayed in CLAUDE.md
+- Automatic file splitting at 40 lessons per category
+- User content preserved between HTML comment markers
+
 ### Planned
 - Web dashboard for pattern visualization
 - Integration with other AI coding tools
-- Pattern clustering and categorization
+- Pattern clustering using ML
 - VSCode extension
+- Team synchronization features

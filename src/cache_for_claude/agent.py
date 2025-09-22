@@ -33,6 +33,7 @@ class CacheAgent:
         self.config_watcher = HotReloadWatcher()
 
         self.processor.detector = self.detector
+        self.first_run_check_done = False
 
     def start(self, watch: bool = True):
         """Start the agent"""
@@ -45,6 +46,10 @@ class CacheAgent:
             padding=(1, 2),
             border_style="cyan"
         ))
+
+        # Check for first run and offer to scan existing documentation
+        if not self.first_run_check_done:
+            self._check_first_run()
 
         console.print("[blue]Processing existing logs...[/blue]")
         self.process_existing_logs()
@@ -168,36 +173,67 @@ class CacheAgent:
         return [d.name for d in projects_dir.iterdir() if d.is_dir()]
 
     def show_statistics(self):
-        """Display enhanced knowledge base statistics"""
+        """Display enhanced knowledge base statistics including documentation"""
         stats = self.kb.get_statistics()
+
+        # Get documentation statistics
+        doc_stats = self._get_documentation_statistics()
 
         # Create a beautiful statistics display
         table = Table(
-            title="✨ Claude Cache Statistics ✨",
+            title="✨ Claude Cache Knowledge Base ✨",
             show_header=True,
             header_style="bold magenta",
             border_style="cyan",
             title_style="bold cyan"
         )
-        table.add_column("Metric", style="cyan", width=25)
-        table.add_column("Value", style="green", width=15)
-        table.add_column("Trend", style="yellow", width=20)
+        table.add_column("Category", style="cyan", width=25)
+        table.add_column("Count", style="green", width=15)
+        table.add_column("Details", style="yellow", width=30)
 
         patterns = stats.get('total_patterns', 0)
         projects = stats.get('projects', 0)
         requests = stats.get('total_requests', 0)
 
-        # Calculate trends and insights
+        # Documentation metrics
+        total_docs = doc_stats.get('total_docs', 0)
+        total_lessons = doc_stats.get('total_lessons', 0)
+        total_warnings = doc_stats.get('total_warnings', 0)
+        doc_projects = doc_stats.get('projects_with_docs', 0)
+
+        # Calculate insights
         patterns_per_project = patterns / projects if projects > 0 else 0
+        lessons_per_project = total_lessons / doc_projects if doc_projects > 0 else 0
         success_rate = (patterns / requests * 100) if requests > 0 else 0
 
+        # Documentation section
+        if total_docs > 0:
+            table.add_row(
+                "📚 Documentation Files",
+                str(total_docs),
+                f"From {doc_projects} projects"
+            )
+            table.add_row(
+                "💡 Lessons Learned",
+                str(total_lessons),
+                f"~{lessons_per_project:.0f} per project"
+            )
+            if total_warnings > 0:
+                table.add_row(
+                    "⚠️  Critical Warnings",
+                    str(total_warnings),
+                    "Important gotchas to avoid"
+                )
+            table.add_section()
+
+        # Auto-learned patterns section
         table.add_row(
-            "🧠 Total Patterns",
+            "🧠 Success Patterns",
             str(patterns),
             self._get_trend_indicator(patterns)
         )
         table.add_row(
-            "📁 Projects",
+            "📁 Active Projects",
             str(projects),
             f"~{patterns_per_project:.1f} patterns each"
         )
@@ -232,6 +268,49 @@ class CacheAgent:
             console.print("\n[green]🌳 Great progress! Your cache is building nicely![/green]")
         else:
             console.print("\n[bold green]🏆 Excellent! You have a rich knowledge base![/bold green]")
+
+    def _get_documentation_statistics(self) -> Dict[str, int]:
+        """Get statistics about imported documentation"""
+        import sqlite3
+        import json
+
+        conn = sqlite3.connect(self.kb.db_path)
+        cursor = conn.cursor()
+
+        # Count total documentation files
+        cursor.execute("SELECT COUNT(*) FROM documentation")
+        total_docs = cursor.fetchone()[0]
+
+        # Count projects with documentation
+        cursor.execute("SELECT COUNT(DISTINCT project_name) FROM documentation")
+        projects_with_docs = cursor.fetchone()[0]
+
+        # Count lessons, warnings, and best practices
+        cursor.execute("SELECT content FROM documentation")
+        docs = cursor.fetchall()
+
+        total_lessons = 0
+        total_warnings = 0
+        total_practices = 0
+
+        for (content,) in docs:
+            try:
+                doc_data = json.loads(content)
+                total_lessons += len(doc_data.get('lessons_learned', []))
+                total_warnings += len(doc_data.get('warnings', []))
+                total_practices += len(doc_data.get('best_practices', []))
+            except:
+                continue
+
+        conn.close()
+
+        return {
+            'total_docs': total_docs,
+            'projects_with_docs': projects_with_docs,
+            'total_lessons': total_lessons,
+            'total_warnings': total_warnings,
+            'total_practices': total_practices
+        }
 
     def _get_trend_indicator(self, value: int) -> str:
         """Get trend indicator based on value"""
@@ -351,6 +430,276 @@ class CacheAgent:
 
         self.process_existing_logs()
         console.print("[green]✓ Knowledge base rebuilt[/green]")
+
+    def _check_first_run(self):
+        """Check if this is first run and offer to scan existing documentation"""
+        # Check if knowledge base is empty
+        stats = self.kb.get_statistics()
+
+        if stats.get('patterns', 0) == 0 and stats.get('requests', 0) == 0:
+            console.print("\n[bold yellow]🎉 Welcome to Claude Cache![/bold yellow]")
+            console.print("\nFirst time setup detected. Let's import your existing documentation!")
+            console.print("\nWould you like to scan for existing documentation?")
+            console.print("1. Scan all Claude Code projects (from logs)")
+            console.print("2. Scan your Development folder")
+            console.print("3. Scan a custom directory")
+            console.print("4. Skip for now\n")
+
+            from rich.prompt import Prompt
+
+            choice = Prompt.ask("Choose an option", choices=["1", "2", "3", "4"], default="2")
+
+            if choice == "1":
+                self._batch_scan_all_projects()
+            elif choice == "2":
+                self._scan_development_folder()
+            elif choice == "3":
+                custom_path = Prompt.ask("Enter the path to scan")
+                if Path(custom_path).exists():
+                    self._scan_custom_directory(custom_path)
+                else:
+                    console.print("[red]Path not found[/red]")
+            else:
+                console.print("[dim]Skipping documentation scan. You can run 'cache scan-docs' later.[/dim]")
+
+        self.first_run_check_done = True
+
+    def _batch_scan_all_projects(self):
+        """Scan all Claude Code projects for existing documentation"""
+        from .doc_scanner import DocumentationScanner
+
+        console.print("\n[cyan]Scanning all projects for documentation...[/cyan]")
+
+        # Find all project directories
+        claude_projects_dir = Path.home() / '.claude' / 'projects'
+        if not claude_projects_dir.exists():
+            console.print("[yellow]No Claude Code projects found yet[/yellow]")
+            return
+
+        project_dirs = [d for d in claude_projects_dir.iterdir() if d.is_dir()]
+
+        if not project_dirs:
+            console.print("[yellow]No projects found[/yellow]")
+            return
+
+        scanner = DocumentationScanner(self.kb)
+        total_docs = 0
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            console=console
+        ) as progress:
+
+            task = progress.add_task(f"Scanning {len(project_dirs)} projects...",
+                                    total=len(project_dirs))
+
+            for project_dir in project_dirs:
+                project_name = project_dir.name
+                progress.update(task, description=f"Scanning {project_name}...")
+
+                # Try to find the actual project path from logs
+                actual_path = self._find_project_path(project_name)
+
+                if actual_path and Path(actual_path).exists():
+                    docs = scanner.scan_repository(actual_path, project_name)
+                    total_docs += len(docs)
+
+                progress.advance(task)
+
+        console.print(f"\n[green]✓ Imported {total_docs} documentation files![/green]")
+        console.print("[dim]Documentation will be included in context generation[/dim]\n")
+
+    def _find_project_path(self, project_name: str) -> Optional[str]:
+        """Try to find the actual filesystem path for a project from its logs"""
+        project_log_dir = Path.home() / '.claude' / 'projects' / project_name
+
+        # Look for the most recent log file
+        log_files = sorted(project_log_dir.glob('*.jsonl'),
+                          key=lambda p: p.stat().st_mtime, reverse=True)
+
+        if not log_files:
+            return None
+
+        # Parse first few lines to find working directory
+        import json
+        try:
+            with open(log_files[0], 'r') as f:
+                for line in f:
+                    try:
+                        entry = json.loads(line)
+                        # Look for working directory in various places
+                        if 'workingDirectory' in entry:
+                            return entry['workingDirectory']
+                        if 'cwd' in entry:
+                            return entry['cwd']
+                        if entry.get('type') == 'tool_call':
+                            if 'workingDirectory' in entry.get('args', {}):
+                                return entry['args']['workingDirectory']
+                    except:
+                        continue
+        except:
+            pass
+
+        # Fallback: try common development directories
+        common_paths = [
+            Path.home() / 'Development' / project_name,
+            Path.home() / 'Projects' / project_name,
+            Path.home() / 'Code' / project_name,
+            Path.home() / 'dev' / project_name,
+            Path.home() / project_name,
+        ]
+
+        for path in common_paths:
+            if path.exists():
+                return str(path)
+
+        return None
+
+    def _scan_development_folder(self):
+        """Scan the user's Development folder for all projects with documentation"""
+        from .doc_scanner import DocumentationScanner
+
+        # Common development folder locations
+        dev_paths = [
+            Path.home() / 'Development',
+            Path.home() / 'Projects',
+            Path.home() / 'dev',
+            Path.home() / 'Code',
+            Path.home() / 'Documents' / 'Development',
+            Path.home() / 'workspace'
+        ]
+
+        # Find which one exists
+        dev_folder = None
+        for path in dev_paths:
+            if path.exists():
+                dev_folder = path
+                break
+
+        if not dev_folder:
+            # Ask user for their development folder
+            from rich.prompt import Prompt
+            custom = Prompt.ask("Enter your development folder path", default=str(Path.home() / 'Development'))
+            dev_folder = Path(custom)
+
+            if not dev_folder.exists():
+                console.print("[red]Development folder not found[/red]")
+                return
+
+        console.print(f"\n[cyan]Scanning {dev_folder} for project documentation...[/cyan]")
+        console.print("[dim]This may take a few moments for large folders...[/dim]\n")
+
+        scanner = DocumentationScanner(self.kb)
+        total_docs = 0
+        scanned_projects = []
+
+        # Find all potential project directories (has .git or package.json or README)
+        project_dirs = []
+
+        # First level subdirectories only (don't go too deep)
+        for item in dev_folder.iterdir():
+            if item.is_dir() and not item.name.startswith('.'):
+                # Check if it looks like a project
+                if (item / '.git').exists() or \
+                   (item / 'package.json').exists() or \
+                   (item / 'README.md').exists() or \
+                   (item / 'setup.py').exists() or \
+                   (item / 'Cargo.toml').exists():
+                    project_dirs.append(item)
+
+        if not project_dirs:
+            console.print("[yellow]No projects found in development folder[/yellow]")
+            return
+
+        console.print(f"[green]Found {len(project_dirs)} projects to scan[/green]\n")
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            console=console
+        ) as progress:
+
+            task = progress.add_task(f"Scanning {len(project_dirs)} projects...",
+                                    total=len(project_dirs))
+
+            for project_path in project_dirs:
+                project_name = project_path.name
+                progress.update(task, description=f"Scanning {project_name}...")
+
+                try:
+                    docs = scanner.scan_repository(str(project_path), project_name)
+                    if docs:
+                        total_docs += len(docs)
+                        scanned_projects.append(project_name)
+                except Exception as e:
+                    console.print(f"[yellow]Warning: Could not scan {project_name}: {e}[/yellow]")
+
+                progress.advance(task)
+
+        console.print(f"\n[bold green]✓ Successfully imported {total_docs} documentation files![/bold green]")
+        if scanned_projects:
+            console.print(f"[green]Projects scanned: {', '.join(scanned_projects[:10])}")
+            if len(scanned_projects) > 10:
+                console.print(f"[dim]... and {len(scanned_projects) - 10} more[/dim]")
+
+        # Show immediate statistics after scan
+        console.print("\n" + "="*60)
+        console.print("[bold cyan]📊 Your Knowledge Base Starting Point:[/bold cyan]\n")
+
+        # Get detailed stats
+        doc_stats = self._get_documentation_statistics()
+
+        if doc_stats['total_lessons'] > 0:
+            console.print(f"  💡 [green]{doc_stats['total_lessons']}[/green] lessons learned imported")
+        if doc_stats['total_warnings'] > 0:
+            console.print(f"  ⚠️  [yellow]{doc_stats['total_warnings']}[/yellow] critical warnings found")
+        if doc_stats['total_practices'] > 0:
+            console.print(f"  ✅ [cyan]{doc_stats['total_practices']}[/cyan] best practices documented")
+
+        console.print(f"\n  📁 Knowledge organized across [bold]{len(scanned_projects)}[/bold] projects")
+        console.print(f"  📚 Ready to learn from your coding sessions!\n")
+
+        console.print("="*60 + "\n")
+        console.print("[dim]Claude will now automatically use this knowledge![/dim]")
+        console.print("[dim]Say 'Perfect!' or 'Thanks!' when things work to save new patterns.[/dim]\n")
+
+    def _scan_custom_directory(self, directory_path: str):
+        """Scan a custom directory for projects and documentation"""
+        from .doc_scanner import DocumentationScanner
+
+        dir_path = Path(directory_path)
+        console.print(f"\n[cyan]Scanning {dir_path} for documentation...[/cyan]")
+
+        scanner = DocumentationScanner(self.kb)
+
+        # Determine if this is a single project or multiple projects
+        is_single_project = (dir_path / '.git').exists() or \
+                           (dir_path / 'package.json').exists() or \
+                           (dir_path / 'README.md').exists()
+
+        if is_single_project:
+            # Scan as single project
+            project_name = dir_path.name
+            docs = scanner.scan_repository(str(dir_path), project_name)
+            console.print(f"\n[green]✓ Imported {len(docs)} documentation files from {project_name}![/green]")
+        else:
+            # Scan subdirectories as separate projects
+            total_docs = 0
+            for item in dir_path.iterdir():
+                if item.is_dir() and not item.name.startswith('.'):
+                    try:
+                        docs = scanner.scan_repository(str(item), item.name)
+                        total_docs += len(docs)
+                    except Exception as e:
+                        console.print(f"[yellow]Warning: Could not scan {item.name}: {e}[/yellow]")
+
+            console.print(f"\n[green]✓ Imported {total_docs} documentation files![/green]")
+
+        console.print("[dim]Documentation will be included in context generation[/dim]\n")
 
     def _show_banner(self):
         """Display ASCII art banner"""

@@ -197,6 +197,90 @@ def daemon(action):
 
 
 @cli.command()
+@click.argument('repo_path', type=click.Path(exists=True), default='.')
+@click.option('--project', '-p', help='Project name (defaults to directory name)')
+@click.option('--db', type=click.Path(), help='Custom database path')
+def scan_docs(repo_path, project, db):
+    """Scan repository for documentation and lessons learned"""
+    try:
+        from .doc_scanner import DocumentationScanner
+
+        agent = CacheAgent(db)
+        scanner = DocumentationScanner(agent.kb)
+
+        # Use current directory if not specified
+        repo_path = Path(repo_path).resolve()
+
+        console.print(f"[cyan]Scanning repository: {repo_path}[/cyan]")
+        docs = scanner.scan_repository(str(repo_path), project)
+
+        console.print(f"\n[green]✓ Successfully scanned {len(docs)} documents[/green]")
+
+        # Show summary of what was found
+        if docs:
+            lessons_count = sum(len(d.lessons_learned) for d in docs)
+            warnings_count = sum(len(d.warnings) for d in docs)
+            practices_count = sum(len(d.best_practices) for d in docs)
+
+            console.print("\n[bold]Summary:[/bold]")
+            console.print(f"  • Lessons learned: {lessons_count}")
+            console.print(f"  • Warnings/gotchas: {warnings_count}")
+            console.print(f"  • Best practices: {practices_count}")
+            console.print(f"  • Code examples: {sum(len(d.code_examples) for d in docs)}")
+
+            console.print("\n[dim]Documentation has been added to your knowledge base.[/dim]")
+            console.print("[dim]It will be included in future context generation.[/dim]")
+
+    except Exception as e:
+        console.print(f"[red]Error scanning documentation: {e}[/red]")
+        sys.exit(1)
+
+
+@cli.command()
+@click.option('--query', '-q', help='Search for specific content')
+@click.option('--project', '-p', help='Filter by project name')
+@click.option('--type', '-t', help='Filter by document type (lessons, architecture, guide, etc.)')
+@click.option('--db', type=click.Path(), help='Custom database path')
+def search_docs(query, project, type, db):
+    """Search through indexed documentation"""
+    try:
+        from .doc_scanner import DocumentationScanner
+        import json
+
+        agent = CacheAgent(db)
+        scanner = DocumentationScanner(agent.kb)
+
+        results = scanner.kb.search_documentation(query, project)
+
+        if not results:
+            console.print("[yellow]No documentation found matching your search[/yellow]")
+            return
+
+        console.print(f"\n[bold]Found {len(results)} documents:[/bold]\n")
+
+        for result in results[:5]:  # Show top 5
+            doc_data = json.loads(result['content'])
+
+            console.print(f"[cyan]{result['file_path']}[/cyan] ({result['doc_type']})")
+
+            if doc_data.get('lessons_learned'):
+                console.print("  [bold]Lessons:[/bold]")
+                for lesson in doc_data['lessons_learned'][:3]:
+                    console.print(f"    • {lesson[:80]}...")
+
+            if doc_data.get('warnings'):
+                console.print("  [bold]Warnings:[/bold]")
+                for warning in doc_data['warnings'][:2]:
+                    console.print(f"    ⚠️  {warning[:80]}...")
+
+            console.print()
+
+    except Exception as e:
+        console.print(f"[red]Error searching documentation: {e}[/red]")
+        sys.exit(1)
+
+
+@cli.command()
 def info():
     """Show information about Claude Cache"""
     console.print(f"""

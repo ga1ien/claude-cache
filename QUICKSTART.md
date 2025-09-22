@@ -52,13 +52,39 @@ pip install -e .
 
 ### First Time Setup
 ```bash
-# Run this once to process your existing Claude logs
-cache process
+# Just run:
+cache start
 
-# You'll see something like:
-# ✓ Processing existing logs...
-# ✓ Found 15 successful patterns
-# ✓ Generated context for my-project
+# On first run, you'll see:
+# 🎉 Welcome to Claude Cache!
+#
+# Would you like to scan for existing documentation?
+# 1. Scan all Claude Code projects (from logs)
+# 2. Scan your Development folder     [Default]
+# 3. Scan a custom directory
+# 4. Skip for now
+#
+# Choose an option [2]: _
+```
+
+Choose option 2 (default) to scan your entire Development folder!
+
+```bash
+# After scanning, you'll see:
+# Found 42 projects to scan
+# Scanning my-react-app...  [████████] 100%
+#
+# ✓ Successfully imported 156 documentation files!
+# Projects scanned: my-react-app, python-api, mobile-app...
+#
+# 📊 Your Knowledge Base Starting Point:
+#
+#   💡 342 lessons learned imported
+#   ⚠️  28 critical warnings found
+#   ✅ 89 best practices documented
+#
+#   📁 Knowledge organized across 42 projects
+#   📚 Ready to learn from your coding sessions!
 ```
 
 ### Start Monitoring
@@ -115,7 +141,12 @@ Claude Cache creates these files in your project:
 ```
 your-project/
 ├── .claude/
-│   ├── CLAUDE.md           # ← Claude reads this automatically!
+│   ├── CLAUDE.md           # ← Claude reads this automatically! (5-10KB)
+│   ├── lessons/            # ← Organized lessons by category
+│   │   ├── authentication_lessons.md
+│   │   ├── database_lessons.md
+│   │   ├── api_lessons.md
+│   │   └── debugging_lessons.md
 │   └── commands/
 │       ├── project-context.md
 │       ├── best-practices.md
@@ -124,26 +155,38 @@ your-project/
 
 ### The Magic: CLAUDE.md
 
-This file is automatically read by Claude Code. It contains:
-- Your successful coding patterns
-- What worked before for similar problems
-- Project-specific conventions
-- Files that are frequently modified together
+This file is automatically read by Claude Code. It's kept small (5-10KB) and contains:
+- Top 5 critical warnings from your docs
+- Category index pointing to detailed lessons
+- Instructions for Claude on where to find specific info
+- Your custom notes (preserved during updates)
 
 **Example CLAUDE.md content:**
 ```markdown
-# Claude Cache Knowledge Base for your-project
+# Claude Code Knowledge Base - your-project
 
-## Successful Patterns Detected
+📚 **342 lessons organized across 8 categories**
 
-### Pattern 1: Authentication Implementation
-- **What Worked**: JWT with refresh tokens
-- **Files**: auth.js, middleware.js
-- **Approach**: Middleware-first implementation
+## 📁 Lesson Categories
+- **Authentication** (85 lessons - **12 CRITICAL**): `.claude/lessons/authentication_lessons.md`
+  > Never store passwords in plain text...
+- **Database** (62 lessons): `.claude/lessons/database_lessons.md`
+  > Always use parameterized queries...
 
-### Pattern 2: Database Migrations
-- **What Worked**: Rollback, fix, re-apply
-- **Key Learning**: Always backup before migrations
+## ⚠️ CRITICAL WARNINGS - READ FIRST
+1. Never commit API keys to git...
+2. SQL injection vulnerability in user inputs...
+3. JWT tokens must have expiration...
+
+## 🤖 Claude Instructions
+When the user asks about a specific topic:
+1. Check the relevant category file in `.claude/lessons/`
+2. For authentication issues → `.claude/lessons/authentication_lessons.md`
+
+## 📝 User Notes
+<!-- USER_CONTENT_START -->
+[Your custom notes here - never deleted!]
+<!-- USER_CONTENT_END -->
 ```
 
 ---

@@ -97,6 +97,19 @@ class KnowledgeBase:
         ''')
 
         cursor.execute('''
+            CREATE TABLE IF NOT EXISTS documentation (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_name TEXT NOT NULL,
+                file_path TEXT NOT NULL,
+                doc_type TEXT,
+                content TEXT,
+                extracted_at DATETIME,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(project_name, file_path)
+            )
+        ''')
+
+        cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_patterns_project
             ON success_patterns(project_name)
         ''')
@@ -371,3 +384,115 @@ class KnowledgeBase:
             self.store_success_pattern(pattern, pattern.get('project_name', 'imported'))
 
         console.print(f"[green]✓ Imported {len(patterns)} patterns[/green]")
+
+    def store_documentation(self, project_name: str, file_path: str, doc_type: str,
+                           content: str, extracted_at: str):
+        """Store extracted documentation in the knowledge base"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute('''
+                INSERT OR REPLACE INTO documentation
+                (project_name, file_path, doc_type, content, extracted_at)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (project_name, file_path, doc_type, content, extracted_at))
+
+            conn.commit()
+        finally:
+            conn.close()
+
+    def search_documentation(self, query: str, project_name: Optional[str] = None,
+                           limit: int = 10) -> List[Dict[str, Any]]:
+        """Search through stored documentation"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            if project_name:
+                cursor.execute('''
+                    SELECT project_name, file_path, doc_type, content, extracted_at
+                    FROM documentation
+                    WHERE project_name = ?
+                    ORDER BY extracted_at DESC
+                    LIMIT ?
+                ''', (project_name, limit))
+            else:
+                cursor.execute('''
+                    SELECT project_name, file_path, doc_type, content, extracted_at
+                    FROM documentation
+                    ORDER BY extracted_at DESC
+                    LIMIT ?
+                ''', (limit,))
+
+            results = []
+            for row in cursor.fetchall():
+                results.append({
+                    'project_name': row[0],
+                    'file_path': row[1],
+                    'doc_type': row[2],
+                    'content': row[3],
+                    'extracted_at': row[4]
+                })
+
+            # Filter by query relevance if provided
+            if query and results:
+                import json
+                scored_results = []
+                for result in results:
+                    doc_data = json.loads(result['content'])
+                    # Simple relevance scoring based on query terms
+                    score = 0
+                    query_terms = query.lower().split()
+                    content_str = json.dumps(doc_data).lower()
+
+                    for term in query_terms:
+                        score += content_str.count(term)
+
+                    if score > 0:
+                        result['relevance_score'] = score
+                        scored_results.append(result)
+
+                # Sort by relevance
+                scored_results.sort(key=lambda x: x['relevance_score'], reverse=True)
+                return scored_results[:limit]
+
+            return results
+
+        finally:
+            conn.close()
+
+    def get_documentation_for_context(self, project_name: str) -> List[Dict[str, Any]]:
+        """Get relevant documentation for context injection"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute('''
+                SELECT file_path, doc_type, content
+                FROM documentation
+                WHERE project_name = ?
+                AND doc_type IN ('lessons', 'postmortem', 'architecture', 'guide')
+                ORDER BY
+                    CASE doc_type
+                        WHEN 'lessons' THEN 1
+                        WHEN 'postmortem' THEN 2
+                        WHEN 'architecture' THEN 3
+                        WHEN 'guide' THEN 4
+                        ELSE 5
+                    END
+                LIMIT 10
+            ''', (project_name,))
+
+            docs = []
+            for row in cursor.fetchall():
+                docs.append({
+                    'file_path': row[0],
+                    'doc_type': row[1],
+                    'content': row[2]
+                })
+
+            return docs
+
+        finally:
+            conn.close()
