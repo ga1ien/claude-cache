@@ -4,6 +4,7 @@ import click
 import sys
 from pathlib import Path
 from rich.console import Console
+from datetime import datetime
 
 from . import __version__
 from .agent import CacheAgent
@@ -11,11 +12,20 @@ from .daemon import CacheDaemon
 
 console = Console()
 
+ASCII_ART = """
+ ██████╗██╗      █████╗ ██╗   ██╗██████╗ ███████╗     ██████╗ █████╗  ██████╗██╗  ██╗███████╗
+██╔════╝██║     ██╔══██╗██║   ██║██╔══██╗██╔════╝    ██╔════╝██╔══██╗██╔════╝██║  ██║██╔════╝
+██║     ██║     ███████║██║   ██║██║  ██║█████╗      ██║     ███████║██║     ███████║█████╗
+██║     ██║     ██╔══██║██║   ██║██║  ██║██╔══╝      ██║     ██╔══██║██║     ██╔══██║██╔══╝
+╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗    ╚██████╗██║  ██║╚██████╗██║  ██║███████╗
+ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝     ╚═════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝
+"""
+
 
 @click.group()
 @click.version_option(version=__version__, prog_name="cache")
 def cli():
-    """Claude Cache - Memory for your AI coding assistant"""
+    """Claude Cache - Give your AI coding assistant perfect recall"""
     pass
 
 
@@ -281,37 +291,145 @@ def search_docs(query, project, type, db):
 
 
 @cli.command()
+@click.argument('solution')
+@click.option('--context', '-c', help='Additional context about the solution')
+@click.option('--tags', '-t', help='Comma-separated tags for categorization')
+@click.option('--project', '-p', help='Project name (defaults to current directory)')
+@click.option('--db', type=click.Path(), help='Custom database path')
+def learn(solution, context, tags, project, db):
+    """Save a successful solution to your knowledge base"""
+    try:
+        agent = CacheAgent(db)
+
+        # Use current directory as project if not specified
+        if not project:
+            project = Path.cwd().name
+
+        pattern = {
+            'request_type': 'manual_save',
+            'user_request': context or '',
+            'approach': solution,
+            'solution_steps': [solution],
+            'tags': tags.split(',') if tags else [],
+            'timestamp': datetime.now().isoformat()
+        }
+
+        agent.kb.store_success_pattern(pattern, project)
+
+        console.print(f"✅ [green]Pattern saved successfully![/green]")
+        console.print(f"🏷️  Tags: {tags or 'none'}")
+        console.print(f"📁 Project: {project}")
+
+    except Exception as e:
+        console.print(f"[red]Error saving pattern: {e}[/red]")
+        sys.exit(1)
+
+
+@cli.command()
+@click.argument('url')
+@click.option('--project', '-p', help='Project name (defaults to current directory)')
+@click.option('--db', type=click.Path(), help='Custom database path')
+def browse(url, project, db):
+    """Index documentation from URL or file path"""
+    try:
+        from .doc_scanner import DocumentationScanner
+        import json
+
+        agent = CacheAgent(db)
+        scanner = DocumentationScanner(agent.kb)
+
+        # Use current directory as project if not specified
+        if not project:
+            project = Path.cwd().name
+
+        console.print(f"[cyan]Indexing documentation: {url}[/cyan]")
+
+        # Determine if URL or file path
+        if url.startswith(('http://', 'https://', 'file://')):
+            # Web documentation
+            scraped = scanner.scrape_documentation(url)
+            if not scraped:
+                console.print(f"[red]❌ Failed to fetch documentation from {url}[/red]")
+                sys.exit(1)
+
+            extracted = scanner.extract_lessons(scraped['content'])
+            doc_type = 'web'
+        else:
+            # Local file/directory
+            path = Path(url).expanduser().resolve()
+            if not path.exists():
+                console.print(f"[red]❌ Path not found: {url}[/red]")
+                sys.exit(1)
+
+            if path.is_file():
+                content = path.read_text()
+                doc_type = 'file'
+            else:
+                # Directory - read README or main docs
+                readme = path / 'README.md'
+                if readme.exists():
+                    content = readme.read_text()
+                    doc_type = 'readme'
+                else:
+                    console.print(f"[red]❌ No documentation found in directory: {url}[/red]")
+                    sys.exit(1)
+
+            extracted = scanner.extract_lessons(content)
+
+        # Store in knowledge base
+        agent.kb.store_documentation(
+            project_name=project,
+            file_path=url,
+            doc_type=doc_type,
+            content=json.dumps(extracted),
+            extracted_at=datetime.now().isoformat()
+        )
+
+        console.print("✅ [green]Documentation indexed successfully![/green]")
+        console.print(f"📊 Extracted Content:")
+        console.print(f"  • Lessons: {len(extracted.get('lessons', []))}")
+        console.print(f"  • Warnings: {len(extracted.get('warnings', []))}")
+        console.print(f"  • Best Practices: {len(extracted.get('best_practices', []))}")
+        console.print(f"📁 Project: {project}")
+
+    except Exception as e:
+        console.print(f"[red]Error indexing documentation: {e}[/red]")
+        sys.exit(1)
+
+
+@cli.command()
 def info():
     """Show information about Claude Cache"""
-    console.print(f"""
-[bold cyan]Claude Cache v{__version__}[/bold cyan]
+    console.print(f"[bold cyan]{ASCII_ART}[/bold cyan]")
+    console.print(f"[bold cyan]Claude Cache v{__version__}[/bold cyan]")
+    console.print("[bold]Give your AI coding assistant perfect recall[/bold]\n")
 
-[bold]Overview:[/bold]
-Claude Cache builds memory from your Claude Code interactions,
-creating a personalized knowledge base of successful patterns.
+    console.print("[bold]Overview:[/bold]")
+    console.print("Claude Cache automatically learns from every successful solution and provides")
+    console.print("instant access to your accumulated knowledge directly within Claude Code.\n")
 
-[bold]Features:[/bold]
-• Real-time log monitoring
-• Success pattern detection
-• Context generation for similar tasks
-• Slash command generation for Claude Code
-• Project convention tracking
-• Export/import for team sharing
+    console.print("[bold]Features:[/bold]")
+    console.print("• 🔄 Never solve the same problem twice")
+    console.print("• 🔍 Semantic search with AI understanding")
+    console.print("• ⚡ Zero context switching in Claude Code")
+    console.print("• 🏗️ Cross-project pattern recognition")
+    console.print("• 📚 Documentation indexing and search\n")
 
-[bold]Quick Start:[/bold]
-1. Run [cyan]cache start[/cyan] to begin monitoring
-2. Use Claude Code as normal
-3. Access patterns with slash commands in .claude/commands/
+    console.print("[bold]Claude Code Integration:[/bold]")
+    console.print("Add to your .claude.json:")
+    console.print('[cyan]{"mcpServers": {"cache": {"type": "stdio", "command": "cache-mcp"}}}[/cyan]\n')
 
-[bold]Log Location:[/bold]
-~/.claude/projects/
+    console.print("[bold]CLI Quick Start:[/bold]")
+    console.print("1. [cyan]cache learn[/cyan] \"Fixed CORS issue with middleware\" --tags cors,api")
+    console.print("2. [cyan]cache query[/cyan] \"authentication problems\"")
+    console.print("3. [cyan]cache browse[/cyan] https://docs.example.com")
+    console.print("4. [cyan]cache stats[/cyan] to see your knowledge base\n")
 
-[bold]Database Location:[/bold]
-~/.claude/knowledge/cache.db
+    console.print("[bold]Storage:[/bold]")
+    console.print("All data stored locally in ~/.claude/knowledge/ - completely private\n")
 
-[bold]Documentation:[/bold]
-https://github.com/yourusername/claude-cache
-""")
+    console.print("[bold]Documentation:[/bold]")
+    console.print("https://github.com/ga1ien/claude-cache")
 
 
 def main():
