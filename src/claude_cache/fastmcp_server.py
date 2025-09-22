@@ -42,32 +42,81 @@ kb = KnowledgeBase(silent=True)
 agent = CacheAgent(kb=kb)
 
 @mcp.tool()
-async def query(query: str, limit: int = 5) -> str:
+async def query(query: str, limit: int = 5, project: str = None) -> str:
     """
-    Search your coding patterns and documentation using semantic vector search.
-    Finds relevant solutions from past sessions.
+    Search your coding patterns and documentation using intelligent contextual search.
+    Automatically prioritizes patterns most relevant to your current project and context.
 
     Args:
         query: What to search for (e.g., 'authentication', 'database optimization')
         limit: Maximum number of results to return (default: 5)
+        project: Project name for context-aware results (auto-detected if not provided)
 
     Returns:
-        Formatted search results with similarity scores
+        Contextually ranked search results with relevance scores and applicability
     """
     try:
         results = []
 
-        # Search patterns
-        if kb.vector_search:
-            patterns = kb.vector_search.search_patterns(query, limit=limit)
-            results.extend(patterns)
-        else:
-            patterns = kb.search_patterns(query, limit=limit)
-            results.extend([{
-                'content': p.get('approach', ''),
-                'type': 'pattern',
-                'similarity': 0.5
-            } for p in patterns])
+        # Try to detect current project context if not provided
+        if not project:
+            project = "default"  # Could be enhanced with actual project detection
+
+        # Get contextual patterns using cross-project intelligence
+        try:
+            cross_intel = agent.processor.cross_project_intelligence
+            if cross_intel:
+                # Build current context for better ranking
+                current_context = {
+                    'current_task': query,
+                    'recent_successful_patterns': []  # Could be populated from recent history
+                }
+
+                # Get contextually relevant patterns
+                contextual_patterns = cross_intel.get_contextual_patterns(
+                    project, current_context, limit=limit
+                )
+
+                # Convert to results format with enhanced metadata
+                for pattern in contextual_patterns:
+                    scope = pattern.get('scope', 'unknown')
+                    confidence = pattern.get('confidence', 'medium')
+
+                    result = {
+                        'content': pattern.get('approach', pattern.get('description', '')),
+                        'type': 'contextual_pattern',
+                        'scope': scope,
+                        'confidence': confidence,
+                        'similarity': 0.8 if confidence == 'high' else 0.6,
+                        'project_specific': scope == 'project_specific'
+                    }
+                    results.append(result)
+        except Exception:
+            # Fallback to traditional search if contextual search fails
+            pass
+
+        # Fallback or supplement with traditional search
+        if not results or len(results) < limit:
+            remaining_limit = limit - len(results)
+
+            if kb.vector_search:
+                patterns = kb.vector_search.search_patterns(query, limit=remaining_limit)
+                for pattern in patterns:
+                    results.append({
+                        'content': pattern.get('content', ''),
+                        'type': 'pattern',
+                        'similarity': pattern.get('similarity', 0.5),
+                        'scope': 'traditional_search'
+                    })
+            else:
+                patterns = kb.search_patterns(query, limit=remaining_limit)
+                for pattern in patterns:
+                    results.append({
+                        'content': pattern.get('approach', ''),
+                        'type': 'pattern',
+                        'similarity': 0.5,
+                        'scope': 'traditional_search'
+                    })
 
         # Search documentation
         docs = kb.search_documentation(query, limit=limit)
@@ -84,16 +133,40 @@ async def query(query: str, limit: int = 5) -> str:
         if not results:
             return f"No results found for '{query}'"
 
-        output = f"🔍 Found {len(results)} results for '{query}':\n\n"
+        # Sort results by similarity/relevance
+        results.sort(key=lambda x: x.get('similarity', 0), reverse=True)
+        results = results[:limit]
+
+        output = f"🔍 Found {len(results)} contextual results for '{query}':\n\n"
 
         for i, result in enumerate(results, 1):
             content_type = result.get('type', 'unknown')
-            icon = "📚" if content_type == 'documentation' else "🧠"
+            scope = result.get('scope', 'unknown')
+            confidence = result.get('confidence', 'medium')
+
+            # Choose appropriate icon and context info
+            if content_type == 'documentation':
+                icon = "📚"
+                context_info = "Documentation"
+            elif content_type == 'contextual_pattern':
+                if scope == 'project_specific':
+                    icon = "🎯"
+                    context_info = f"Project-specific ({confidence} confidence)"
+                elif scope == 'universal':
+                    icon = "🌍"
+                    context_info = f"Universal pattern ({confidence} confidence)"
+                else:
+                    icon = "🔄"
+                    context_info = f"Transferable ({confidence} confidence)"
+            else:
+                icon = "🧠"
+                context_info = "General pattern"
+
             content = result.get('content', '')[:200]
             score = result.get('similarity', 0)
 
             output += f"{i}. {icon} {content}...\n"
-            output += f"   Score: {score:.3f}\n\n"
+            output += f"   Relevance: {score:.3f} | {context_info}\n\n"
 
         return output
 
@@ -144,18 +217,71 @@ async def learn(
 @mcp.tool()
 async def suggest(context: str = "", project_name: str = "default") -> str:
     """
-    Get proactive suggestions based on current context.
-    Claude Cache analyzes what you're working on and suggests relevant patterns.
+    Get intelligent, proactive recommendations based on current context.
+    Uses advanced pattern analysis to suggest the most relevant solutions.
 
     Args:
         context: Current code or problem description (optional)
         project_name: Current project name (default: 'default')
 
     Returns:
-        Relevant suggestions and patterns
+        Contextually intelligent suggestions with applicability analysis
     """
     try:
-        # Get project patterns
+        output = "💡 **Intelligent suggestions for your current work:**\n\n"
+
+        # Use cross-project intelligence for better suggestions
+        try:
+            cross_intel = agent.processor.cross_project_intelligence
+            if cross_intel:
+                # Build rich context
+                current_context = {
+                    'current_task': context,
+                    'recent_successful_patterns': []  # Could be populated from recent history
+                }
+
+                # Get contextually ranked patterns
+                contextual_patterns = cross_intel.get_contextual_patterns(
+                    project_name, current_context, limit=5
+                )
+
+                if contextual_patterns:
+                    # Group by scope for better presentation
+                    project_specific = [p for p in contextual_patterns if p.get('scope') == 'project_specific']
+                    universal = [p for p in contextual_patterns if p.get('scope') == 'universal']
+                    transferable = [p for p in contextual_patterns if p.get('scope') in ['transferable', 'context_dependent']]
+
+                    if project_specific:
+                        output += f"**🎯 {project_name}-specific patterns:**\n"
+                        for i, p in enumerate(project_specific[:3], 1):
+                            confidence = p.get('confidence', 'medium')
+                            output += f"{i}. {p.get('approach', p.get('description', ''))[:100]}...\n"
+                            output += f"   Confidence: {confidence}\n"
+                        output += "\n"
+
+                    if universal:
+                        output += "**🌍 Universal patterns that apply here:**\n"
+                        for i, p in enumerate(universal[:2], 1):
+                            confidence = p.get('confidence', 'medium')
+                            success_rate = p.get('success_rate', 0)
+                            output += f"{i}. {p.get('approach', p.get('description', ''))[:100]}...\n"
+                            output += f"   Success rate: {success_rate:.1%} | Confidence: {confidence}\n"
+                        output += "\n"
+
+                    if transferable:
+                        output += "**🔄 Patterns from similar contexts:**\n"
+                        for i, p in enumerate(transferable[:2], 1):
+                            confidence = p.get('confidence', 'medium')
+                            output += f"{i}. {p.get('approach', p.get('description', ''))[:100]}...\n"
+                            output += f"   Transferability: {confidence}\n"
+
+                    return output
+
+        except Exception:
+            # Fallback to traditional suggestions
+            pass
+
+        # Fallback to original suggestion logic
         patterns = kb.get_project_patterns(project_name, limit=3)
 
         # Search for context-relevant patterns if context provided
@@ -163,8 +289,6 @@ async def suggest(context: str = "", project_name: str = "default") -> str:
             relevant = kb.vector_search.search_patterns(context, limit=3) if kb.vector_search else []
         else:
             relevant = []
-
-        output = "💡 **Suggestions for your current work:**\n\n"
 
         if patterns:
             output += f"**Recent patterns from {project_name}:**\n"

@@ -121,6 +121,133 @@ class CrossProjectIntelligence:
         conn.commit()
         conn.close()
 
+    def classify_pattern_scope(self, pattern: Dict, project_context: Dict) -> Tuple[str, float]:
+        """Classify if a pattern is project-specific or universal"""
+        universality_score = 0.0
+        classification = "unknown"
+
+        # Analyze pattern content for specificity indicators
+        approach = pattern.get('approach', '').lower()
+        files_involved = pattern.get('files_involved', [])
+        tags = pattern.get('tags', [])
+
+        # Universal pattern indicators
+        universal_indicators = {
+            'authentication': ['auth', 'login', 'jwt', 'oauth', 'session'],
+            'database': ['query', 'sql', 'orm', 'migration', 'schema'],
+            'api': ['rest', 'api', 'endpoint', 'http', 'request'],
+            'testing': ['test', 'spec', 'unit', 'integration', 'e2e'],
+            'error_handling': ['error', 'exception', 'try', 'catch', 'handle'],
+            'security': ['security', 'validation', 'sanitize', 'encrypt'],
+            'performance': ['cache', 'optimize', 'performance', 'speed'],
+            'deployment': ['deploy', 'build', 'ci', 'cd', 'docker']
+        }
+
+        # Project-specific indicators
+        project_specific_indicators = [
+            'this project', 'our codebase', 'specific to',
+            'custom implementation', 'project requirement',
+            'team convention', 'local setup'
+        ]
+
+        # Check for universal patterns
+        for category, keywords in universal_indicators.items():
+            if any(keyword in approach for keyword in keywords):
+                universality_score += 0.3
+                if any(keyword in str(tags) for keyword in keywords):
+                    universality_score += 0.2
+
+        # Check for project-specific indicators
+        for indicator in project_specific_indicators:
+            if indicator in approach:
+                universality_score -= 0.4
+
+        # Analyze file paths for project specificity
+        if files_involved:
+            generic_paths = ['src/', 'lib/', 'components/', 'utils/', 'helpers/']
+            specific_paths = ['config/', 'settings/', '.env', 'local/', 'custom/']
+
+            for file_path in files_involved:
+                if any(generic in file_path for generic in generic_paths):
+                    universality_score += 0.1
+                if any(specific in file_path for specific in specific_paths):
+                    universality_score -= 0.2
+
+        # Determine classification
+        if universality_score > 0.6:
+            classification = "universal"
+        elif universality_score > 0.3:
+            classification = "transferable"
+        elif universality_score > 0.0:
+            classification = "context_dependent"
+        else:
+            classification = "project_specific"
+
+        return classification, max(0.0, min(1.0, universality_score))
+
+    def get_contextual_patterns(self, project_name: str, current_context: Dict, limit: int = 5) -> List[Dict]:
+        """Get patterns most relevant to current project and context"""
+        project_profile = self._get_project_profile(project_name)
+
+        # Get project-specific patterns first
+        project_patterns = self._get_patterns_for_project(project_name)
+
+        # Get universal patterns that match project stack
+        universal_patterns = self._get_universal_patterns_for_stack(
+            project_profile.languages if project_profile else set(),
+            project_profile.frameworks if project_profile else set()
+        )
+
+        # Combine and rank by relevance to current context
+        all_patterns = project_patterns + universal_patterns
+        ranked_patterns = self._rank_patterns_by_context(all_patterns, current_context)
+
+        return ranked_patterns[:limit]
+
+    def _rank_patterns_by_context(self, patterns: List[Dict], context: Dict) -> List[Dict]:
+        """Rank patterns by relevance to current context"""
+        current_file = context.get('current_file', '')
+        current_task = context.get('current_task', '').lower()
+        recent_patterns = context.get('recent_successful_patterns', [])
+
+        scored_patterns = []
+
+        for pattern in patterns:
+            score = 0.0
+
+            # Match file type/extension
+            if current_file:
+                pattern_files = pattern.get('files_involved', [])
+                current_ext = current_file.split('.')[-1] if '.' in current_file else ''
+                for file_path in pattern_files:
+                    if current_ext and file_path.endswith(f'.{current_ext}'):
+                        score += 0.3
+
+            # Match task/intent similarity
+            if current_task:
+                approach = pattern.get('approach', '').lower()
+                common_words = set(current_task.split()) & set(approach.split())
+                score += len(common_words) * 0.1
+
+            # Boost recently successful similar patterns
+            pattern_tags = set(pattern.get('tags', []))
+            for recent in recent_patterns:
+                recent_tags = set(recent.get('tags', []))
+                tag_overlap = len(pattern_tags & recent_tags)
+                if tag_overlap > 0:
+                    score += tag_overlap * 0.2
+
+            # Consider pattern success rate and confidence
+            confidence = pattern.get('confidence', 'medium')
+            confidence_boost = {'high': 0.3, 'medium': 0.1, 'low': 0.0}
+            score += confidence_boost.get(confidence, 0.0)
+
+            scored_patterns.append((pattern, score))
+
+        # Sort by score descending
+        scored_patterns.sort(key=lambda x: x[1], reverse=True)
+        return [pattern for pattern, score in scored_patterns]
+
     def analyze_project(self, project_name: str, entries: List[Dict]) -> ProjectProfile:
         """Analyze a project to build its profile"""
         languages = set()
@@ -168,6 +295,92 @@ class CrossProjectIntelligence:
 
         self._store_project_profile(profile)
         return profile
+
+    def _get_project_profile(self, project_name: str) -> Optional[ProjectProfile]:
+        """Get stored project profile"""
+        conn = sqlite3.connect(self.kb.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            'SELECT * FROM project_profiles WHERE project_name = ?',
+            (project_name,)
+        )
+        result = cursor.fetchone()
+        conn.close()
+
+        if result:
+            return ProjectProfile(
+                project_name=result[1],
+                languages=set(json.loads(result[2])) if result[2] else set(),
+                frameworks=set(json.loads(result[3])) if result[3] else set(),
+                libraries=set(json.loads(result[4])) if result[4] else set(),
+                pattern_types=set(json.loads(result[5])) if result[5] else set(),
+                common_tasks=json.loads(result[6]) if result[6] else [],
+                last_updated=datetime.fromisoformat(result[7]) if result[7] else datetime.now()
+            )
+        return None
+
+    def _get_patterns_for_project(self, project_name: str) -> List[Dict]:
+        """Get patterns specific to a project"""
+        conn = sqlite3.connect(self.kb.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT * FROM success_patterns
+            WHERE project_name = ?
+            ORDER BY created_at DESC
+            LIMIT 20
+        ''', (project_name,))
+
+        patterns = []
+        for row in cursor.fetchall():
+            pattern = {
+                'id': row[0],
+                'project_name': row[1],
+                'approach': row[3],
+                'files_involved': json.loads(row[4]) if row[4] else [],
+                'tags': json.loads(row[6]) if row[6] else [],
+                'confidence': 'medium',  # Default confidence
+                'scope': 'project_specific'
+            }
+            patterns.append(pattern)
+
+        conn.close()
+        return patterns
+
+    def _get_universal_patterns_for_stack(self, languages: set, frameworks: set) -> List[Dict]:
+        """Get universal patterns that match the tech stack"""
+        conn = sqlite3.connect(self.kb.db_path)
+        cursor = conn.cursor()
+
+        # Look for patterns from global_patterns table
+        cursor.execute('''
+            SELECT * FROM global_patterns
+            WHERE transferability_score > 0.6
+            ORDER BY success_rate DESC
+            LIMIT 15
+        ''')
+
+        patterns = []
+        for row in cursor.fetchall():
+            tech_stack = json.loads(row[2]) if row[2] else []
+            # Check if this pattern's tech stack overlaps with project's
+            if any(tech in tech_stack for tech in languages | frameworks):
+                pattern = {
+                    'id': row[0],
+                    'pattern_type': row[1],
+                    'tech_stack': tech_stack,
+                    'description': row[3],
+                    'approach': row[3],  # Use description as approach for now
+                    'success_rate': row[5],
+                    'transferability_score': row[6],
+                    'confidence': 'high' if row[5] > 0.8 else 'medium',
+                    'scope': 'universal'
+                }
+                patterns.append(pattern)
+
+        conn.close()
+        return patterns
 
     def identify_transferable_patterns(self, pattern: Dict, source_project: str) -> GlobalPattern:
         """Identify if a pattern can be used across projects"""
