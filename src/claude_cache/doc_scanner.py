@@ -409,3 +409,56 @@ class DocumentationScanner:
             docs.append(DocumentKnowledge(**doc_data))
 
         return docs
+
+    def scrape_documentation(self, url: str) -> Optional[Dict[str, str]]:
+        """Scrape documentation from a web URL"""
+        try:
+            import requests
+            from bs4 import BeautifulSoup
+
+            # Fetch the page
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+
+            # Parse HTML
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # Remove script and style elements
+            for script in soup(["script", "style"]):
+                script.decompose()
+
+            # Get text
+            text = soup.get_text()
+
+            # Break into lines and remove leading/trailing space
+            lines = (line.strip() for line in text.splitlines())
+            # Drop blank lines
+            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            # Join with newlines
+            text = '\n'.join(chunk for chunk in chunks if chunk)
+
+            return {
+                'url': url,
+                'title': soup.title.string if soup.title else url,
+                'content': text
+            }
+
+        except ImportError:
+            # If requests or beautifulsoup4 not installed, return simple message
+            return {
+                'url': url,
+                'title': 'Web scraping unavailable',
+                'content': 'Install requests and beautifulsoup4 to scrape web documentation'
+            }
+        except Exception as e:
+            console.print(f"[red]Error scraping {url}: {e}[/red]")
+            return None
+
+    def extract_lessons(self, content: str) -> Dict[str, List]:
+        """Extract lessons, warnings, and best practices from documentation content"""
+        return {
+            'lessons': self._extract_lessons_learned(content),
+            'warnings': self._extract_warnings(content),
+            'best_practices': self._extract_best_practices(content),
+            'code_examples': self._extract_code_examples(content)
+        }

@@ -35,9 +35,9 @@ except ImportError:
 
 app = Server("claude-cache")
 
-# Initialize Claude Cache
-kb = KnowledgeBase()
-agent = CacheAgent()
+# Initialize Claude Cache (silent mode for MCP)
+kb = KnowledgeBase(silent=True)
+agent = CacheAgent(kb=kb)
 
 @app.list_tools()
 async def list_tools() -> list[Tool]:

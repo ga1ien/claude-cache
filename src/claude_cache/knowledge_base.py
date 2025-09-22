@@ -17,7 +17,8 @@ console = Console()
 class KnowledgeBase:
     """Store and retrieve successful patterns and project conventions"""
 
-    def __init__(self, db_path: str = None):
+    def __init__(self, db_path: str = None, silent: bool = False):
+        self.silent = silent
         if db_path is None:
             db_dir = Path.home() / '.claude' / 'knowledge'
             db_dir.mkdir(parents=True, exist_ok=True)
@@ -27,7 +28,7 @@ class KnowledgeBase:
         self.setup_database()
 
         # Initialize vector search engine (with automatic fallback)
-        self.vector_search = VectorSearchEngine(db_path)
+        self.vector_search = VectorSearchEngine(db_path, silent=self.silent)
 
         # Keep legacy TF-IDF for backward compatibility
         self.vectorizer = TfidfVectorizer(max_features=1000)
@@ -129,7 +130,8 @@ class KnowledgeBase:
         conn.commit()
         conn.close()
 
-        console.print(f"[green]✓ Knowledge base initialized at {self.db_path}[/green]")
+        if not self.silent:
+            console.print(f"[green]✓ Knowledge base initialized at {self.db_path}[/green]")
 
     def store_success_pattern(self, pattern: Dict, project_name: str, success_score: float = 1.0):
         """Store a successful pattern"""
@@ -672,6 +674,48 @@ class KnowledgeBase:
                 })
 
             return docs
+
+        finally:
+            conn.close()
+
+    def get_project_patterns(self, project_name: Optional[str] = None, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get recent patterns for a project"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            if project_name:
+                cursor.execute('''
+                    SELECT project_name, request_type, user_request, approach,
+                           files_involved, solution_steps, timestamp
+                    FROM success_patterns
+                    WHERE project_name = ?
+                    ORDER BY timestamp DESC
+                    LIMIT ?
+                ''', (project_name, limit))
+            else:
+                cursor.execute('''
+                    SELECT project_name, request_type, user_request, approach,
+                           files_involved, solution_steps, timestamp
+                    FROM success_patterns
+                    ORDER BY timestamp DESC
+                    LIMIT ?
+                ''', (limit,))
+
+            patterns = []
+            for row in cursor.fetchall():
+                pattern = {
+                    'project_name': row[0],
+                    'request_type': row[1],
+                    'user_request': row[2],
+                    'approach': row[3],
+                    'files_involved': json.loads(row[4]) if row[4] else [],
+                    'solution_steps': json.loads(row[5]) if row[5] else [],
+                    'timestamp': row[6]
+                }
+                patterns.append(pattern)
+
+            return patterns
 
         finally:
             conn.close()

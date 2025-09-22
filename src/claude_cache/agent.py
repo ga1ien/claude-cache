@@ -23,8 +23,8 @@ console = Console()
 class CacheAgent:
     """Main agent that caches successful patterns from Claude Code"""
 
-    def __init__(self, db_path: Optional[str] = None):
-        self.kb = KnowledgeBase(db_path)
+    def __init__(self, db_path: Optional[str] = None, kb: Optional[KnowledgeBase] = None):
+        self.kb = kb if kb is not None else KnowledgeBase(db_path)
         self.processor = LogProcessor(self.kb)
         self.detector = EnhancedSuccessDetector()  # Using enhanced detector for better stack awareness
         self.injector = ContextInjector(self.kb)

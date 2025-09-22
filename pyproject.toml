@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "claude-cache"
-version = "0.6.0"
+version = "0.6.1"
 description = "Claude Cache - Intelligent memory system for AI coding with MCP integration, hybrid vector search, and proactive pattern suggestions"
 readme = "README.md"
 license = {text = "MIT"}
@@ -63,6 +63,7 @@ all = [
 [project.scripts]
 cache = "claude_cache.cli:main"
 cache-mcp = "claude_cache.complete_mcp:main"
+cache-mcp-fast = "claude_cache.fastmcp_server:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

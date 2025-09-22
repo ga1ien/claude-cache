@@ -16,7 +16,8 @@ console = Console()
 class VectorSearchEngine:
     """Hybrid search engine with automatic fallback"""
 
-    def __init__(self, db_path: str = None):
+    def __init__(self, db_path: str = None, silent: bool = False):
+        self.silent = silent
         if db_path is None:
             db_dir = Path.home() / '.claude' / 'knowledge'
             db_dir.mkdir(parents=True, exist_ok=True)
@@ -38,18 +39,21 @@ class VectorSearchEngine:
             # Try to import sentence-transformers for semantic search
             from sentence_transformers import SentenceTransformer
 
-            console.print("[cyan]Initializing semantic search engine...[/cyan]")
+            if not self.silent:
+                console.print("[cyan]Initializing semantic search engine...[/cyan]")
             self.model = SentenceTransformer('all-MiniLM-L6-v2')
             self.search_mode = 'semantic'
-            console.print("[green]✨ Semantic search enabled - 2x better pattern matching![/green]")
-            console.print("[green]🧠 Understanding context and meaning, not just keywords[/green]")
+            if not self.silent:
+                console.print("[green]✨ Semantic search enabled - 2x better pattern matching![/green]")
+                console.print("[green]🧠 Understanding context and meaning, not just keywords[/green]")
 
         except ImportError:
             # Fallback to TF-IDF (already have scikit-learn)
-            console.print("[yellow]📊 Using TF-IDF search (keyword matching)[/yellow]")
-            console.print("[yellow]💡 Tip: For semantic understanding, install:[/yellow]")
-            console.print("    [cyan]pip install sentence-transformers[/cyan]")
-            console.print("    [dim]This enables context-aware pattern matching[/dim]\n")
+            if not self.silent:
+                console.print("[yellow]📊 Using TF-IDF search (keyword matching)[/yellow]")
+                console.print("[yellow]💡 Tip: For semantic understanding, install:[/yellow]")
+                console.print("    [cyan]pip install sentence-transformers[/cyan]")
+                console.print("    [dim]This enables context-aware pattern matching[/dim]\n")
 
             self.vectorizer = TfidfVectorizer(
                 max_features=1000,
@@ -355,6 +359,65 @@ class VectorSearchEngine:
                 )
                 self.vectorizer.fit(self.corpus)
                 console.print("[cyan]Optimized TF-IDF index[/cyan]")
+
+    def search_patterns(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """Search for patterns using vector search or TF-IDF"""
+        # Use the existing search method and filter for patterns
+        results = self.search(query, limit=limit)
+        pattern_results = []
+
+        for result in results:
+            metadata = result.get('metadata', {})
+            if metadata.get('type') == 'pattern' or 'pattern' in result.get('text', '').lower():
+                pattern_results.append({
+                    'content': result.get('text', ''),
+                    'type': 'pattern',
+                    'similarity': result.get('similarity', 0),
+                    'metadata': metadata
+                })
+
+        return pattern_results
+
+    def update_index(self):
+        """Update the search index with new patterns"""
+        # Re-initialize search engine to refresh index
+        self._initialize_search_engine()
+
+        # Load all patterns from database
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute('''
+                SELECT approach, request_type, solution_steps, tags
+                FROM success_patterns
+                ORDER BY timestamp DESC
+            ''')
+
+            patterns = []
+            for row in cursor.fetchall():
+                text = f"{row[0]} {row[1]}"
+                if row[2]:
+                    try:
+                        steps = json.loads(row[2])
+                        if isinstance(steps, list):
+                            text += " " + " ".join(steps)
+                    except:
+                        pass
+                patterns.append(text)
+
+            # Update index based on search mode
+            if self.search_mode == 'semantic':
+                # Semantic search will auto-index on next search
+                pass
+            else:
+                # Update TF-IDF vectorizer
+                if patterns:
+                    self.pattern_vectors = self.vectorizer.fit_transform(patterns)
+                    self.patterns = patterns
+
+        finally:
+            conn.close()
 
 
 class SearchCapabilities:
