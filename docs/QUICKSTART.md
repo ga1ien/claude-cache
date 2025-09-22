@@ -1,12 +1,8 @@
-# 🚀 Claude Cache v0.6.0 - Quick Start Guide
+# 🚀 Claude Cache - Quick Start Guide
 
-**Choose your experience level - get running in 2-5 minutes!**
+**Get perfect AI memory in 2 minutes**
 
-Claude Cache v0.6.0 offers three distinct usage modes. Choose based on your needs:
-
-- **🚀 MCP Mode**: Revolutionary native Claude Code integration (5 min setup)
-- **⚡ Enhanced Mode**: 2x better semantic search (3 min setup)
-- **🔧 Basic Mode**: Core CLI functionality (2 min setup)
+Never solve the same problem twice. Claude Cache remembers every successful solution and provides instant access when you need it.
 
 ---
 

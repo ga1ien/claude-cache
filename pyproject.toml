@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "claude-cache"
 version = "0.6.1"
-description = "Claude Cache - Intelligent memory system for AI coding with MCP integration, hybrid vector search, and proactive pattern suggestions"
+description = "Your AI coding assistant now has perfect memory - Never solve the same problem twice with intelligent pattern learning and instant semantic search"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
