@@ -47,7 +47,7 @@ pip install claude-cache[mcp]
   "mcpServers": {
     "claude-cache": {
       "type": "stdio",
-      "command": "cache-mcp"
+      "command": "cache-mcp-fast"
     }
   }
 }
@@ -58,11 +58,11 @@ pip install claude-cache[mcp]
 **4. Test the tools:**
 ```
 Type "/" in Claude Code to see:
-/mcp__claude-cache__query
-/mcp__claude-cache__learn
-/mcp__claude-cache__suggest
-/mcp__claude-cache__stats
-/mcp__claude-cache__browse
+/mcp__claude-cache__cache_query
+/mcp__claude-cache__cache_learn
+/mcp__claude-cache__cache_suggest
+/mcp__claude-cache__cache_stats
+/mcp__claude-cache__cache_browse
 ```
 
 ### ⚡ Enhanced Mode Installation (3 minutes)
@@ -91,7 +91,7 @@ cache start
 
 ```
 # In Claude Code, type:
-/mcp__claude-cache__query authentication
+/mcp__claude-cache__cache_query authentication
 
 # Instant results:
 🔍 Found 3 results for 'authentication'
@@ -103,7 +103,7 @@ cache start
 
 **When something works:**
 ```
-/mcp__claude-cache__learn
+/mcp__claude-cache__cache_learn
 description: "JWT login working perfectly"
 category: "authentication"
 
@@ -112,7 +112,7 @@ category: "authentication"
 
 **Get proactive suggestions:**
 ```
-/mcp__claude-cache__suggest
+/mcp__claude-cache__cache_suggest
 context: "Setting up Express API routes"
 intent: "add authentication middleware"
 
@@ -157,14 +157,14 @@ cache browse https://docs.example.com
 ### 🚀 MCP Mode Verification
 ```
 # In Claude Code, type "/" and look for:
-/mcp__claude-cache__query
-/mcp__claude-cache__learn
-/mcp__claude-cache__suggest
-/mcp__claude-cache__stats
-/mcp__claude-cache__browse
+/mcp__claude-cache__cache_query
+/mcp__claude-cache__cache_learn
+/mcp__claude-cache__cache_suggest
+/mcp__claude-cache__cache_stats
+/mcp__claude-cache__cache_browse
 
 # Test with:
-/mcp__claude-cache__stats
+/mcp__claude-cache__cache_stats
 # Should show your knowledge base info
 ```
 
@@ -242,7 +242,7 @@ your-project/
 **Learning Patterns:**
 ```
 # When something works perfectly:
-/mcp__claude-cache__learn
+/mcp__claude-cache__cache_learn
 description: "JWT refresh token rotation working"
 category: "authentication"
 code_snippet: "// Your working code here"
@@ -251,7 +251,7 @@ code_snippet: "// Your working code here"
 **Getting Suggestions:**
 ```
 # Before starting work:
-/mcp__claude-cache__suggest
+/mcp__claude-cache__cache_suggest
 context: "Building user dashboard"
 intent: "add real-time updates"
 ```
@@ -259,8 +259,8 @@ intent: "add real-time updates"
 **Quick Queries:**
 ```
 # Find relevant patterns instantly:
-/mcp__claude-cache__query database performance
-/mcp__claude-cache__query React hooks
+/mcp__claude-cache__cache_query database performance
+/mcp__claude-cache__cache_query React hooks
 ```
 
 ### ⚡ Enhanced & 🔧 Basic Mode Best Practices
@@ -293,7 +293,7 @@ cache browse https://docs.example.com/api
 You: "I need to add authentication"
 
 # Instead of guessing, search first:
-You: "/mcp__claude-cache__query authentication"
+You: "/mcp__claude-cache__cache_query authentication"
 Claude: "🔍 Found JWT pattern from my-api project..."
 
 # Use the suggested approach
@@ -301,7 +301,7 @@ You: "Implement that JWT pattern"
 Claude: *implements based on your successful pattern*
 
 # When it works:
-You: "/mcp__claude-cache__learn JWT auth working in new project"
+You: "/mcp__claude-cache__cache_learn JWT auth working in new project"
 Claude: "✅ Pattern saved for future use!"
 ```
 
