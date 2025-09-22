@@ -1,6 +1,6 @@
 """Claude Cache - Memory for your AI coding assistant"""
 
-__version__ = "0.6.5"
+__version__ = "0.6.6"
 
 from .log_watcher import LogWatcher
 from .log_processor import LogProcessor
