@@ -380,6 +380,7 @@ Claude Cache/
 
 - 📦 [Installation Guide](docs/INSTALLATION.md) - Step-by-step installation for all platforms
 - 🚀 [Quick Start Guide](docs/QUICK_START.md) - Get running in 2 minutes
+- 🗣️ [Communication](docs/COMMUNICATION.md) - How Claude Cache provides feedback and guidance
 - 🧠 [Philosophy](docs/PHILOSOPHY.md) - Why dual-path learning matters
 - 🔧 [Configuration](docs/CONFIGURATION.md) - Advanced options
 - 📖 [How It Works](docs/HOW_IT_WORKS.md) - Technical deep dive
