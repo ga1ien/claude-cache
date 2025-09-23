@@ -384,21 +384,47 @@ class CacheAgent:
         except:
             return None
 
+    def _get_recent_pattern_count(self) -> int:
+        """Get count of patterns from last 24 hours"""
+        import sqlite3
+        from datetime import datetime, timedelta
+        try:
+            conn = sqlite3.connect(self.kb.db_path)
+            cursor = conn.cursor()
+            yesterday = (datetime.now() - timedelta(days=1)).isoformat()
+            cursor.execute("""
+                SELECT COUNT(*)
+                FROM success_patterns
+                WHERE created_at > ?
+            """, (yesterday,))
+            result = cursor.fetchone()
+            conn.close()
+            return result[0] if result else 0
+        except:
+            return 0
+
     def generate_status_table(self):
         """Generate a status table for live display"""
         stats = self.kb.get_statistics()
         patterns = stats.get('total_patterns', 0)
         projects = stats.get('projects', 0)
 
+        # Get most active project
+        most_active = self._get_most_active_project()
+
+        # Get recent activity count (patterns from last 24h)
+        recent_patterns = self._get_recent_pattern_count()
+
         table = Table(title="🧠 Claude Cache - Live Monitoring", show_header=True, border_style="blue")
-        table.add_column("Metric", style="cyan", width=20)
-        table.add_column("Value", style="green", width=15)
-        table.add_column("Status", style="yellow", width=30)
+        table.add_column("Metric", style="cyan", width=22)
+        table.add_column("Value", style="green", width=20)
+        table.add_column("Status", style="yellow", width=35)
 
         table.add_row("Patterns Learned", str(patterns), self._get_pattern_status(patterns))
-        table.add_row("Projects Tracked", str(projects), f"From ~/.claude/projects/")
-        table.add_row("Monitoring", "[green]● Active[/green]", f"Watching for changes...")
-        table.add_row("Last Check", datetime.now().strftime('%H:%M:%S'), "Press Ctrl+C to stop")
+        table.add_row("Projects Tracked", str(projects), f"Monitoring ~/.claude/projects/")
+        table.add_row("Most Active", most_active or "None yet", "Current session leader")
+        table.add_row("Recent Activity", f"{recent_patterns} today", "New patterns detected")
+        table.add_row("Status", "[green]● Watching[/green]", f"Updated {datetime.now().strftime('%H:%M:%S')}")
 
         return table
 
