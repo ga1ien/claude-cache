@@ -70,7 +70,7 @@ class LogWatcher:
     def start(self):
         """Start monitoring log files"""
         if not self.claude_projects_dir.exists():
-            if not self.silent:
+            if not getattr(self, 'silent', False):
                 console.print(f"[yellow]Creating Claude projects directory: {self.claude_projects_dir}[/yellow]")
             self.claude_projects_dir.mkdir(parents=True, exist_ok=True)
 
@@ -84,7 +84,7 @@ class LogWatcher:
         )
 
         self.observer.start()
-        if not self.silent:
+        if not getattr(self, 'silent', False):
             console.print(f"[green]✓ Monitoring Claude Code logs in {self.claude_projects_dir}[/green]")
 
         return self.observer
@@ -94,7 +94,7 @@ class LogWatcher:
         if self.observer:
             self.observer.stop()
             self.observer.join()
-            if not self.silent:
+            if not getattr(self, 'silent', False):
                 console.print("[yellow]Log monitoring stopped[/yellow]")
 
     def _clean_project_name(self, raw_name: str) -> str:
@@ -113,7 +113,7 @@ class LogWatcher:
     def process_existing_logs(self):
         """Process all existing log files"""
         if not self.claude_projects_dir.exists():
-            if not self.silent:
+            if not getattr(self, 'silent', False):
                 console.print(f"[yellow]Claude projects directory not found at {self.claude_projects_dir}[/yellow]")
                 console.print("[yellow]Creating directory for future logs...[/yellow]")
             self.claude_projects_dir.mkdir(parents=True, exist_ok=True)
@@ -122,24 +122,24 @@ class LogWatcher:
         log_files = list(self.claude_projects_dir.glob('**/*.jsonl'))
 
         if not log_files:
-            if not self.silent:
+            if not getattr(self, 'silent', False):
                 console.print(f"[yellow]No existing log files found in {self.claude_projects_dir}[/yellow]")
                 console.print("[dim]Logs will be created when you use Claude Code[/dim]")
             return
 
-        if not self.silent:
+        if not getattr(self, 'silent', False):
             console.print(f"[blue]Processing {len(log_files)} existing log files...[/blue]")
 
         processed_count = 0
         for log_file in log_files:
             project_name = self._clean_project_name(log_file.parent.name)
             # Show progress for each file only if not silent
-            if not self.silent:
+            if not getattr(self, 'silent', False):
                 console.print(f"  Processing: {project_name}/{log_file.name}")
 
             # Process the file - this will handle incremental processing
             self.log_processor.process_file(str(log_file))
             processed_count += 1
 
-        if not self.silent:
+        if not getattr(self, 'silent', False):
             console.print(f"[green]✓ Finished processing {processed_count} log files[/green]")

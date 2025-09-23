@@ -154,7 +154,8 @@ Load relevant context for: $ARGUMENTS
         stats = self.kb.get_statistics(project_name)
 
         if stats.get('patterns', 0) == 0:
-            console.print("[yellow]No patterns found for project[/yellow]")
+            if not self.silent:
+                console.print("[yellow]No patterns found for project[/yellow]")
             return
 
         self._generate_best_practices_command(project_name)
