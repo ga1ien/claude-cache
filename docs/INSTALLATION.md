@@ -13,17 +13,31 @@ Complete installation instructions for all platforms, from absolute beginner to 
 
 ## Quick Install (If You Have Python)
 
-If you already have Python 3.8+ and pip installed:
+If you already have Python 3.8+ installed:
 
+**Recommended: Using pipx (isolated installation)**
+```bash
+# Install pipx first (if not already installed)
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+
+# Install Claude Cache with all features
+pipx install "claude-cache[mcp]"
+
+# Start background learning
+cache start --watch
+```
+
+**Alternative: Using pip directly**
 ```bash
 # Basic install
-pip install claude-cache
+pip install --user claude-cache
 
-# Or with all features (recommended)
-pip install "claude-cache[mcp]"
+# Or with all features
+pip install --user "claude-cache[mcp]"
 
-# Start using
-cache start
+# Start background learning
+cache start --watch
 ```
 
 If the above doesn't work or you're unsure, follow the detailed instructions below.
@@ -182,13 +196,16 @@ source ~/.zshrc
 #### Step 8: First Run
 
 ```bash
-# Start Claude Cache
+# Start Claude Cache with real-time learning (recommended)
+cache start --watch
+
+# Or start with one-time processing only
 cache start
 
 # You should see:
 # ✓ Knowledge base initialized at ~/.claude/knowledge/cache.db
 # Processing existing log files...
-# Starting real-time monitoring...
+# Starting real-time monitoring... (if using --watch)
 ```
 
 #### Step 9: Configure Claude Code Integration (Optional)
@@ -345,6 +362,10 @@ If "not recognized":
 #### Step 8: First Run
 
 ```powershell
+# Start with real-time learning (recommended)
+cache start --watch
+
+# Or start with one-time processing only
 cache start
 ```
 
@@ -455,11 +476,11 @@ Once you have Python and pip/pipx installed, you can choose your installation mo
 ### 🚀 Mode 1: Basic Installation
 
 ```bash
-# Using pipx (recommended)
+# Using pipx (recommended - isolated and clean)
 pipx install claude-cache
 
-# Or using pip
-pip install claude-cache
+# Alternative: Using pip with --user flag
+pip install --user claude-cache
 ```
 
 **Features:**
@@ -478,11 +499,11 @@ pip install claude-cache
 ### ⚡ Mode 2: Enhanced Installation
 
 ```bash
-# Using pipx (recommended)
+# Using pipx (recommended - isolated and clean)
 pipx install "claude-cache[enhanced]"
 
-# Or using pip
-pip install "claude-cache[enhanced]"
+# Alternative: Using pip with --user flag
+pip install --user "claude-cache[enhanced]"
 ```
 
 **Additional Features:**
@@ -499,11 +520,11 @@ pip install "claude-cache[enhanced]"
 ### 🎯 Mode 3: MCP Installation (Recommended)
 
 ```bash
-# Using pipx (recommended)
+# Using pipx (recommended - isolated and clean)
 pipx install "claude-cache[mcp]"
 
-# Or using pip
-pip install "claude-cache[mcp]"
+# Alternative: Using pip with --user flag
+pip install --user "claude-cache[mcp]"
 ```
 
 **Ultimate Features:**
@@ -646,9 +667,10 @@ If you encounter issues:
 
 Once installed:
 
-1. **Start Claude Cache**: `cache start`
-2. **Read Quick Start**: [QUICK_START.md](QUICK_START.md)
-3. **Configure**: [CONFIGURATION.md](CONFIGURATION.md)
-4. **Learn More**: [HOW_IT_WORKS.md](HOW_IT_WORKS.md)
+1. **Start Background Learning**: `cache start --watch`
+2. **Open Interactive Monitor**: `cache monitor` (press 'h' for help)
+3. **Read Quick Start**: [QUICK_START.md](QUICK_START.md)
+4. **Configure**: [CONFIGURATION.md](CONFIGURATION.md)
+5. **Learn More**: [HOW_IT_WORKS.md](HOW_IT_WORKS.md)
 
 **Ready to never repeat the same mistake twice!** 🚀

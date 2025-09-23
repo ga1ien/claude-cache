@@ -111,17 +111,24 @@ Result: Documentation indexed and searchable
 
 ### 1. Install Claude Cache
 ```bash
-# Full install with MCP integration (Recommended)
-pip install "claude-cache[mcp]"
+# Using pipx (recommended - isolated installation)
+pipx install "claude-cache[mcp]"
 
-# Enhanced with ML-powered semantic search
-pip install "claude-cache[enhanced]"
+# Alternative: Using pip directly
+pip install --user "claude-cache[mcp]"
 
-# Basic CLI tools only
-pip install claude-cache
+# Basic version
+pipx install claude-cache
 ```
 
-### 2. First Run - Watch the Magic
+### 2. First Run - Choose Your Mode
+
+**Real-time Learning (Recommended):**
+```bash
+cache start --watch
+```
+
+**One-time Processing:**
 ```bash
 cache start
 ```
@@ -145,6 +152,9 @@ Starting real-time monitoring...
 
 ### 3. Use It Immediately
 ```bash
+# Interactive monitoring dashboard (press 'h' for help, 't' for tutorial)
+cache monitor
+
 # Query your knowledge
 cache query "authentication"
 

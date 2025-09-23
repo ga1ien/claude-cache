@@ -580,15 +580,20 @@ def import_kb(input_file, db):
 @click.option('--duration', '-d', type=int, default=30, help='Duration in seconds (default: 30)')
 @click.option('--db', type=click.Path(), help='Custom database path')
 def monitor(duration, db):
-    """Live animated monitoring dashboard"""
+    """Interactive monitoring dashboard with hotkeys and help system"""
     try:
         import asyncio
         from .animations import start_live_monitor
+        from .agent import CacheAgent
 
-        console.print("[bold cyan]🎯 Claude Cache Live Monitor[/bold cyan]")
-        console.print("[dim]Press Ctrl+C to stop[/dim]\n")
+        console.print("[bold cyan]🧠 Claude Cache - Interactive Monitoring[/bold cyan]")
+        console.print("[dim]Press keys to interact: [cyan]h[/cyan]=help [cyan]t[/cyan]=tutorial [cyan]q[/cyan]=query [cyan]s[/cyan]=stats [cyan]ESC[/cyan]=exit[/dim]\n")
 
-        asyncio.run(start_live_monitor(duration))
+        # Create agent instance to access knowledge base
+        agent = CacheAgent(db)
+
+        # Run enhanced monitor with knowledge base connection
+        asyncio.run(start_live_monitor(duration, kb=agent.kb))
 
     except KeyboardInterrupt:
         console.print("\n[yellow]Monitoring stopped[/yellow]")

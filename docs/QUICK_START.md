@@ -36,9 +36,25 @@ pip install "claude-cache[mcp]"
 
 ### Step 1: Start Claude Cache
 
+Choose your mode:
+
+**Option A: Real-time Learning (Recommended)**
+```bash
+cache start --watch
+```
+- Processes existing history once
+- Continuously monitors for new Claude Code sessions
+- Learns patterns automatically in real-time
+- Runs in background while you code
+
+**Option B: One-time Processing**
 ```bash
 cache start
 ```
+- Processes existing history once
+- Exits after processing (no real-time monitoring)
+- Use this for initial setup or manual processing
+- Run again manually when you want to update patterns
 
 You'll see:
 
@@ -57,6 +73,20 @@ Starting real-time monitoring...
 - It's analyzing your historical coding patterns
 - Learning from your successes AND failures
 - Building your personal knowledge base
+
+**Which Mode Should I Use?**
+
+🌟 **Use `cache start --watch` if you:**
+- Want Claude Cache to learn automatically while you code
+- Plan to keep coding with Claude Code regularly
+- Want the most seamless experience
+- Like background processes that "just work"
+
+📝 **Use `cache start` if you:**
+- Want manual control over when patterns are updated
+- Are doing a one-time analysis of existing code
+- Have limited system resources
+- Prefer running processes on-demand
 
 ### Step 2: Let It Learn (One-Time)
 
@@ -77,6 +107,25 @@ Just use Claude Code normally. Claude Cache now:
 - ✅ Builds journey patterns automatically
 
 ## Using Claude Cache
+
+### Interactive Monitoring
+
+Monitor and interact with Claude Cache in real-time:
+
+```bash
+# Start interactive monitoring dashboard
+cache monitor
+```
+
+**Interactive Commands (while monitoring):**
+- **`h`** - Help system with comprehensive usage guide
+- **`t`** - Interactive tutorial (perfect for new users)
+- **`q`** - Quick guidance on querying patterns
+- **`s`** - Show live statistics
+- **`w`** - Learn how to mark successes
+- **`f`** - Learn how to mark failures
+- **`p`** - Project switching guidance
+- **`ESC`** - Exit monitoring
 
 ### Query Your Knowledge
 
@@ -204,6 +253,36 @@ After a few days, Claude Cache will recognize patterns like:
 - 🔧 Check [Configuration](CONFIGURATION.md) for advanced options
 - 🧠 Learn [How It Works](HOW_IT_WORKS.md) for technical details
 - 💡 See [Use Cases](USE_CASES.md) for real-world examples
+
+## Quick Reference
+
+### Essential Commands
+```bash
+cache start --watch            # Real-time background learning (recommended)
+cache start                    # One-time processing (no monitoring)
+cache monitor                  # Interactive monitoring dashboard
+cache query "search term"      # Find relevant patterns
+cache stats                    # See what you've learned
+cache suggest                  # Get contextual suggestions
+```
+
+### Interactive Monitoring Hotkeys
+When running `cache monitor`, press:
+- **`h`** → Full help system
+- **`t`** → Interactive tutorial
+- **`q`** → Query guidance
+- **`s`** → Live statistics
+- **`w`** → Mark success guidance
+- **`f`** → Mark failure guidance
+- **`p`** → Project switching
+- **`ESC`** → Exit
+
+### Active Learning
+```bash
+cache win                      # Mark current work successful
+cache fail "reason"            # Learn from failures
+cache learn "solution" --tags  # Manual pattern saving
+```
 
 ## Troubleshooting
 
