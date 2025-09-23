@@ -378,6 +378,7 @@ Claude Cache/
 
 ## 📚 Documentation
 
+- 📦 [Installation Guide](docs/INSTALLATION.md) - Step-by-step installation for all platforms
 - 🚀 [Quick Start Guide](docs/QUICK_START.md) - Get running in 2 minutes
 - 🧠 [Philosophy](docs/PHILOSOPHY.md) - Why dual-path learning matters
 - 🔧 [Configuration](docs/CONFIGURATION.md) - Advanced options
