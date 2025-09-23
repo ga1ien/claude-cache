@@ -444,6 +444,7 @@ class KnowledgeBase:
         stats = {}
 
         if project_name:
+            # Single project stats
             cursor.execute('SELECT COUNT(*) FROM success_patterns WHERE project_name = ?', (project_name,))
             stats['patterns'] = cursor.fetchone()[0]
 
@@ -452,15 +453,109 @@ class KnowledgeBase:
 
             cursor.execute('SELECT COUNT(*) FROM user_requests WHERE project_name = ?', (project_name,))
             stats['requests'] = cursor.fetchone()[0]
+
+            # Pattern type breakdown for the project
+            cursor.execute('''
+                SELECT
+                    SUM(CASE WHEN success_score >= 0.9 THEN 1 ELSE 0 END) as gold,
+                    SUM(CASE WHEN success_score >= 0.7 AND success_score < 0.9 THEN 1 ELSE 0 END) as silver,
+                    SUM(CASE WHEN success_score < 0.7 THEN 1 ELSE 0 END) as bronze
+                FROM success_patterns
+                WHERE project_name = ?
+            ''', (project_name,))
+            type_counts = cursor.fetchone()
+            stats['pattern_types'] = {
+                'gold': type_counts[0] or 0,
+                'silver': type_counts[1] or 0,
+                'bronze': type_counts[2] or 0
+            }
+
+            # Anti-patterns and journey patterns
+            cursor.execute('SELECT COUNT(*) FROM anti_patterns WHERE project_name = ?', (project_name,))
+            stats['anti_patterns'] = cursor.fetchone()[0]
+
+            cursor.execute('SELECT COUNT(*) FROM journey_patterns WHERE project_name = ?', (project_name,))
+            stats['journey_patterns'] = cursor.fetchone()[0]
         else:
+            # Overall stats with per-project breakdown
             cursor.execute('SELECT COUNT(*) FROM success_patterns')
             stats['total_patterns'] = cursor.fetchone()[0]
 
             cursor.execute('SELECT COUNT(DISTINCT project_name) FROM success_patterns')
-            stats['projects'] = cursor.fetchone()[0]
+            stats['total_projects'] = cursor.fetchone()[0]
 
             cursor.execute('SELECT COUNT(*) FROM user_requests')
             stats['total_requests'] = cursor.fetchone()[0]
+
+            # Get per-project breakdown
+            cursor.execute('''
+                SELECT
+                    project_name,
+                    COUNT(*) as pattern_count,
+                    AVG(success_score) as avg_success_score,
+                    MAX(created_at) as last_activity
+                FROM success_patterns
+                GROUP BY project_name
+                ORDER BY pattern_count DESC
+            ''')
+
+            projects_breakdown = []
+            for row in cursor.fetchall():
+                project_stats = {
+                    'name': row[0],
+                    'patterns': row[1],
+                    'avg_success_score': round(row[2], 2) if row[2] else 0,
+                    'last_activity': row[3]
+                }
+
+                # Get pattern type counts for this project
+                cursor.execute('''
+                    SELECT
+                        SUM(CASE WHEN success_score >= 0.9 THEN 1 ELSE 0 END) as gold,
+                        SUM(CASE WHEN success_score >= 0.7 AND success_score < 0.9 THEN 1 ELSE 0 END) as silver,
+                        SUM(CASE WHEN success_score < 0.7 THEN 1 ELSE 0 END) as bronze
+                    FROM success_patterns
+                    WHERE project_name = ?
+                ''', (row[0],))
+                type_counts = cursor.fetchone()
+
+                project_stats['gold'] = type_counts[0] or 0
+                project_stats['silver'] = type_counts[1] or 0
+                project_stats['bronze'] = type_counts[2] or 0
+
+                # Get anti-patterns count
+                cursor.execute('SELECT COUNT(*) FROM anti_patterns WHERE project_name = ?', (row[0],))
+                project_stats['anti_patterns'] = cursor.fetchone()[0]
+
+                # Get journey patterns count
+                cursor.execute('SELECT COUNT(*) FROM journey_patterns WHERE project_name = ?', (row[0],))
+                project_stats['journey_patterns'] = cursor.fetchone()[0]
+
+                projects_breakdown.append(project_stats)
+
+            stats['projects'] = projects_breakdown
+
+            # Global pattern type totals
+            cursor.execute('''
+                SELECT
+                    SUM(CASE WHEN success_score >= 0.9 THEN 1 ELSE 0 END) as gold,
+                    SUM(CASE WHEN success_score >= 0.7 AND success_score < 0.9 THEN 1 ELSE 0 END) as silver,
+                    SUM(CASE WHEN success_score < 0.7 THEN 1 ELSE 0 END) as bronze
+                FROM success_patterns
+            ''')
+            type_totals = cursor.fetchone()
+            stats['pattern_types_total'] = {
+                'gold': type_totals[0] or 0,
+                'silver': type_totals[1] or 0,
+                'bronze': type_totals[2] or 0
+            }
+
+            # Total anti-patterns and journey patterns
+            cursor.execute('SELECT COUNT(*) FROM anti_patterns')
+            stats['total_anti_patterns'] = cursor.fetchone()[0]
+
+            cursor.execute('SELECT COUNT(*) FROM journey_patterns')
+            stats['total_journey_patterns'] = cursor.fetchone()[0]
 
         conn.close()
         return stats

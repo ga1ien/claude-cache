@@ -445,51 +445,181 @@ class CacheAgent:
         else:
             return "Rich knowledge base! 🏆"
 
-    def query_patterns(self, query: str, project: Optional[str] = None):
-        """Query all indexed content using unified search"""
-        # Use unified search that includes both patterns and documentation
-        results = self.kb.unified_search(query, project, limit=10)
+    def query_patterns(self, query: str, project: Optional[str] = None, filters: Optional[Dict] = None):
+        """Query all indexed content using unified search with advanced filtering"""
+        if filters is None:
+            filters = {}
+
+        # Apply pattern type filters to query
+        type_filter = ""
+        if filters.get('only_gold'):
+            type_filter = " AND success_score >= 0.9"
+        elif filters.get('only_anti'):
+            query = f"anti-pattern {query}"
+        elif filters.get('only_journey'):
+            query = f"journey {query}"
+
+        # Get results
+        limit = filters.get('limit', 10)
+        results = self.kb.unified_search(query, project, limit=limit)
 
         if not results:
             console.print("[yellow]No results found[/yellow]")
             return
 
-        # Display results beautifully
+        # Display results with optional code preview
         from rich.table import Table
+        from rich.syntax import Syntax
+        from rich.panel import Panel
 
-        table = Table(title=f"Search Results for: '{query}'", show_lines=True)
-        table.add_column("#", style="cyan", width=4)
-        table.add_column("Type", style="yellow", width=12)
-        table.add_column("Content", style="white", width=70)
-        table.add_column("Match", style="green", width=8)
+        if filters.get('show_code') or filters.get('show_preview'):
+            # Detailed view with code
+            console.print(f"\n[bold cyan]🔍 Search Results for: '{query}'[/bold cyan]\n")
 
-        for i, result in enumerate(results, 1):
-            # Format type with emoji
-            content_type = result['type']
-            if content_type == 'documentation':
-                type_display = f"📚 {result.get('doc_type', 'doc')}"
-            elif content_type == 'pattern':
-                type_display = "🧠 pattern"
-            else:
-                type_display = f"📝 {content_type}"
+            for i, result in enumerate(results, 1):
+                # Determine pattern type and quality
+                content_type = result.get('type', 'pattern')
+                score = result.get('success_score', result.get('similarity', 0))
 
-            # Format content preview
-            content = result['content'][:100] + "..." if len(result['content']) > 100 else result['content']
+                # Format type with color based on quality
+                if score >= 0.9:
+                    type_emoji = "🥇"
+                    type_color = "green"
+                elif score >= 0.7:
+                    type_emoji = "🥈"
+                    type_color = "yellow"
+                else:
+                    type_emoji = "🥉"
+                    type_color = "dim"
 
-            # Format similarity
-            similarity = f"{result['similarity']:.1%}"
+                # Get full pattern data if available
+                pattern_data = result.get('pattern_data', {})
+                approach = pattern_data.get('approach', result.get('content', ''))
+                solution_steps = pattern_data.get('solution_steps', [])
+                files = pattern_data.get('files_involved', [])
 
-            table.add_row(str(i), type_display, content, similarity)
+                # Build content display
+                content_parts = []
 
-        console.print(table)
+                # Title
+                title = f"{i}. {type_emoji} "
+                if content_type == 'documentation':
+                    title += f"📚 Documentation"
+                elif content_type == 'anti-pattern':
+                    title += f"⚠️ Anti-pattern"
+                elif content_type == 'journey':
+                    title += f"🛤️ Journey Pattern"
+                else:
+                    title += f"Pattern"
 
-        # Show search mode at the bottom
+                # Add project info if available
+                if result.get('project'):
+                    title += f" [{result['project']}]"
+
+                # Description
+                description = approach[:200] + "..." if len(approach) > 200 else approach
+
+                # Code snippet
+                code_content = None
+                if solution_steps and (filters.get('show_code') or filters.get('show_preview')):
+                    # Extract code from solution steps
+                    code_lines = []
+                    for step in solution_steps:
+                        if isinstance(step, str) and any(kw in step.lower() for kw in ['def ', 'class ', 'import ', 'function', '{', '}', '(', ')']):
+                            code_lines.append(step)
+
+                    if code_lines:
+                        if filters.get('show_preview'):
+                            code_content = '\n'.join(code_lines[:5])
+                            if len(code_lines) > 5:
+                                code_content += f"\n... ({len(code_lines) - 5} more lines)"
+                        else:
+                            code_content = '\n'.join(code_lines)
+
+                # Build panel content
+                panel_content = f"[{type_color}]{description}[/{type_color}]"
+
+                if files:
+                    panel_content += f"\n\n[dim]Files: {', '.join(files[:3])}[/dim]"
+
+                if code_content:
+                    # Try to detect language
+                    lang = "python"  # default
+                    if any(ext in str(files) for ext in ['.js', '.jsx', '.ts', '.tsx']):
+                        lang = "javascript"
+                    elif any(ext in str(files) for ext in ['.rs']):
+                        lang = "rust"
+                    elif any(ext in str(files) for ext in ['.go']):
+                        lang = "go"
+
+                    syntax = Syntax(code_content, lang, theme="monokai", line_numbers=True)
+                    panel_content += "\n\n"
+                    console.print(Panel(
+                        panel_content,
+                        title=title,
+                        border_style=type_color,
+                        expand=False
+                    ))
+                    console.print(syntax)
+                else:
+                    console.print(Panel(
+                        panel_content,
+                        title=title,
+                        border_style=type_color,
+                        expand=False
+                    ))
+
+                # Show similarity score
+                console.print(f"[dim]Match: {result['similarity']:.1%}[/dim]\n")
+
+        else:
+            # Compact table view (original)
+            table = Table(title=f"Search Results for: '{query}'", show_lines=True)
+            table.add_column("#", style="cyan", width=4)
+            table.add_column("Type", style="yellow", width=12)
+            table.add_column("Content", style="white", width=70)
+            table.add_column("Match", style="green", width=8)
+
+            for i, result in enumerate(results, 1):
+                # Format type with emoji
+                content_type = result['type']
+                score = result.get('success_score', result.get('similarity', 0))
+
+                if score >= 0.9:
+                    type_display = "🥇 gold"
+                elif score >= 0.7:
+                    type_display = "🥈 silver"
+                elif content_type == 'documentation':
+                    type_display = f"📚 {result.get('doc_type', 'doc')}"
+                elif content_type == 'anti-pattern':
+                    type_display = "⚠️ anti"
+                elif content_type == 'journey':
+                    type_display = "🛤️ journey"
+                else:
+                    type_display = "🥉 bronze"
+
+                # Format content preview
+                content = result['content'][:100] + "..." if len(result['content']) > 100 else result['content']
+
+                # Format similarity
+                similarity = f"{result['similarity']:.1%}"
+
+                table.add_row(str(i), type_display, content, similarity)
+
+            console.print(table)
+
+        # Show search mode and tips
         if results:
             search_mode = results[0].get('search_mode', 'unknown')
+            console.print(f"\n[dim]💡 Tips:[/dim]")
+            console.print(f"[dim]  • Use --code to see full code snippets[/dim]")
+            console.print(f"[dim]  • Use --preview for 5-line preview[/dim]")
+            console.print(f"[dim]  • Use --gold/--anti/--journey to filter types[/dim]")
+
             if search_mode == 'semantic':
-                console.print(f"\n[dim]✨ Using semantic search - understanding context and meaning[/dim]")
+                console.print(f"[dim]  ✨ Using semantic search - understanding context[/dim]")
             else:
-                console.print(f"\n[dim]📊 Using TF-IDF search - matching keywords[/dim]")
+                console.print(f"[dim]  📊 Using TF-IDF search - matching keywords[/dim]")
 
     def export_knowledge(self, output_file: str, project: Optional[str] = None):
         """Export knowledge base to file"""
@@ -836,7 +966,7 @@ class CacheAgent:
     ║  | |__ / ___ \\| |___|  _  | |___          ║
     ║   \\___/_/   \\_\\\\____|_| |_|_____|         ║
     ║                                           ║
-    ║                v0.8.0                     ║
+    ║                v0.7.0                     ║
     ╚═══════════════════════════════════════════╝
         """
 
