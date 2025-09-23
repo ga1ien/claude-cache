@@ -9,6 +9,7 @@ from .log_state import LogStateTracker
 from .error_pattern_learner import ErrorPatternLearner
 from .differential_learner import DifferentialLearner
 from .cross_project_intelligence import CrossProjectIntelligence
+from .dual_path_detector import DualPathDetector
 
 console = Console()
 
@@ -22,10 +23,26 @@ class LogEntry:
         self.type = data.get('type', 'unknown')
         self.timestamp = data.get('timestamp', datetime.now().isoformat())
         self.content = data.get('content', '')
+        # Extract cwd from log data - this is the ACTUAL project directory
+        self.cwd = data.get('cwd', '')
+        # Extract message content properly
+        self.message = data.get('message', {})
 
     @property
     def project_name(self) -> str:
-        """Extract project name from source file path"""
+        """Extract project name from cwd field or fall back to file path"""
+        # First try to use the cwd field from the log data
+        if self.cwd:
+            cwd_path = Path(self.cwd)
+            # Get the last component of the path as the project name
+            project = cwd_path.name
+            # Handle special cases where project might be in a subdirectory
+            if project in ['src', 'lib', 'app', 'client', 'server', 'frontend', 'backend']:
+                # Use parent directory name instead
+                project = cwd_path.parent.name
+            return project
+
+        # Fallback to file path extraction (for older logs without cwd)
         path = Path(self.source_file)
         if path.parent.name == 'projects':
             return 'unknown'
@@ -120,7 +137,9 @@ class LogProcessor:
         self.error_learner = ErrorPatternLearner(self.kb) if self.kb else None
         self.differential_learner = DifferentialLearner(self.kb) if self.kb else None
         self.cross_project_intel = CrossProjectIntelligence(self.kb) if self.kb else None
+        self.dual_path_detector = DualPathDetector(self.kb) if self.kb else None
         self.session_start_times = {}  # Track session timing
+        self.session_entries = {}  # Track entries per session for journey analysis
 
     def process_file(self, file_path: str):
         """Process a single JSONL log file with incremental processing"""
@@ -192,6 +211,22 @@ class LogProcessor:
         if project not in self.session_start_times:
             self.session_start_times[project] = datetime.now()
 
+        # Collect entries for journey analysis
+        session_id = entry.data.get('sessionId', 'unknown')
+        if session_id not in self.session_entries:
+            self.session_entries[session_id] = []
+
+        # Add entry data for journey tracking
+        self.session_entries[session_id].append({
+            'type': entry.type,
+            'content': entry.content,
+            'message': entry.message,
+            'timestamp': entry.timestamp,
+            'project': entry.project_name,
+            'cwd': entry.cwd,
+            'session_id': session_id
+        })
+
         if entry.is_user_message():
             self.handle_user_request(entry)
         elif entry.is_tool_call():
@@ -203,9 +238,22 @@ class LogProcessor:
         if self.error_learner and 'error' in str(entry.content).lower():
             self._process_error_pattern(entry)
 
+        # Analyze journey patterns periodically (every 10 entries)
+        if len(self.session_entries[session_id]) % 10 == 0 and self.dual_path_detector:
+            self._analyze_journey_patterns(session_id)
+
     def handle_user_request(self, entry: LogEntry):
         """Extract and classify user intents"""
-        content = entry.content
+        # Extract actual content from message structure
+        if isinstance(entry.message, dict):
+            content = entry.message.get('content', entry.content)
+        else:
+            content = entry.content
+
+        # Convert content to string if it's not already
+        if not isinstance(content, str):
+            content = str(content)
+
         request_type = self.classify_request(content)
 
         request_data = {
@@ -213,7 +261,8 @@ class LogProcessor:
             'type': request_type,
             'timestamp': entry.timestamp,
             'project': entry.project_name,
-            'source': entry.source_file
+            'source': entry.source_file,
+            'cwd': entry.cwd  # Include the actual working directory
         }
 
         if self.kb:
@@ -241,12 +290,51 @@ class LogProcessor:
             self.kb.store_tool_usage(tool_data)
 
     def handle_assistant_response(self, entry: LogEntry):
-        """Process assistant responses"""
+        """Process assistant responses and extract tool calls"""
+        # Check if message content is an array (contains tool calls)
+        if isinstance(entry.message, dict):
+            message_content = entry.message.get('content', [])
+        else:
+            message_content = entry.content
+
+        # Process tool calls from assistant messages
+        tool_calls_found = []
+        text_content = []
+
+        if isinstance(message_content, list):
+            for item in message_content:
+                if isinstance(item, dict):
+                    if item.get('type') == 'tool_use':
+                        # Extract tool call information
+                        tool_call = {
+                            'tool': item.get('name'),
+                            'args': item.get('input', {}),
+                            'id': item.get('id'),
+                            'timestamp': entry.timestamp,
+                            'project': entry.project_name
+                        }
+                        tool_calls_found.append(tool_call)
+
+                        # Store tool usage
+                        if self.kb:
+                            self.kb.store_tool_usage(tool_call)
+
+                    elif item.get('type') == 'text':
+                        text_content.append(item.get('text', ''))
+                else:
+                    text_content.append(str(item))
+        else:
+            text_content = [str(message_content)]
+
+        # Combine text content
+        combined_content = '\n'.join(text_content)
+
         response_data = {
-            'content': entry.content,
+            'content': combined_content,
             'reasoning': entry.data.get('reasoning', ''),
             'timestamp': entry.timestamp,
-            'project': entry.project_name
+            'project': entry.project_name,
+            'tool_calls': tool_calls_found
         }
 
         if self.kb:
@@ -322,6 +410,37 @@ class LogProcessor:
 
         metrics = self.differential_learner.track_session_metrics(session_data)
         console.print(f"[blue]Pattern efficiency: {metrics.time_to_solution.seconds}s[/blue]")
+
+    def _analyze_journey_patterns(self, session_id: str):
+        """Analyze session entries to extract journey patterns"""
+        if not self.dual_path_detector or session_id not in self.session_entries:
+            return
+
+        try:
+            entries = self.session_entries[session_id]
+            if len(entries) < 3:  # Need at least a few entries for a pattern
+                return
+
+            # Analyze the journey
+            pattern = self.dual_path_detector.analyze_session_journey(entries)
+
+            if pattern:
+                # Store the pattern in the knowledge base
+                self.dual_path_detector.store_pattern(pattern)
+
+                # Log based on pattern type
+                if pattern.pattern_type.value == 'gold':
+                    console.print(f"[gold1]✨ Gold pattern captured: {pattern.key_learning[:50]}[/gold1]")
+                elif pattern.pattern_type.value == 'anti':
+                    console.print(f"[red]⚠️ Anti-pattern learned: {pattern.anti_patterns[0] if pattern.anti_patterns else 'Avoid this approach'}[/red]")
+                elif pattern.pattern_type.value == 'journey':
+                    console.print(f"[cyan]🗺️ Journey pattern recorded: {len(pattern.attempts)} attempts to solution[/cyan]")
+
+        except Exception as e:
+            # Don't disrupt processing for pattern analysis errors
+            if not getattr(self, 'silent_mode', False):
+                console.print(f"[dim]Pattern analysis error: {str(e)[:50]}[/dim]")
+            pass
 
     def get_session_summary(self, project: str) -> Optional[Dict]:
         """Get a summary of the current session"""

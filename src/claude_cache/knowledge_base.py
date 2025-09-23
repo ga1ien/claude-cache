@@ -117,6 +117,43 @@ class KnowledgeBase:
             )
         ''')
 
+        # New tables for dual-path learning
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS anti_patterns (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_name TEXT NOT NULL,
+                pattern_type TEXT,
+                problem TEXT,
+                failed_approach TEXT,
+                error_reason TEXT,
+                context TEXT,
+                alternative_solution TEXT,
+                confidence REAL,
+                timestamp DATETIME,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS journey_patterns (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_name TEXT NOT NULL,
+                pattern_id TEXT UNIQUE,
+                pattern_type TEXT,
+                problem TEXT,
+                attempts TEXT,
+                final_outcome TEXT,
+                key_learning TEXT,
+                anti_patterns TEXT,
+                success_factors TEXT,
+                context TEXT,
+                confidence REAL,
+                session_id TEXT,
+                timestamp DATETIME,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
         cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_patterns_project
             ON success_patterns(project_name)
@@ -716,6 +753,158 @@ class KnowledgeBase:
                 patterns.append(pattern)
 
             return patterns
+
+        finally:
+            conn.close()
+
+    def store_anti_pattern(self, pattern_data: Dict):
+        """Store an anti-pattern (what doesn't work)"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute('''
+                INSERT INTO anti_patterns
+                (project_name, pattern_type, problem, failed_approach, error_reason,
+                 context, alternative_solution, confidence, timestamp)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                pattern_data.get('project', 'unknown'),
+                pattern_data.get('type', 'anti'),
+                pattern_data.get('problem', ''),
+                pattern_data.get('failed_approach', ''),
+                pattern_data.get('error_reason', ''),
+                json.dumps(pattern_data.get('context', {})),
+                pattern_data.get('alternative_solution', ''),
+                pattern_data.get('confidence', 0.5),
+                pattern_data.get('timestamp', datetime.now().isoformat())
+            ))
+            conn.commit()
+        finally:
+            conn.close()
+
+    def store_journey_pattern(self, pattern_data: Dict):
+        """Store a journey pattern (complete problem-solving path)"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute('''
+                INSERT OR REPLACE INTO journey_patterns
+                (project_name, pattern_id, pattern_type, problem, attempts,
+                 final_outcome, key_learning, anti_patterns, success_factors,
+                 context, confidence, session_id, timestamp)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                pattern_data.get('project', 'unknown'),
+                pattern_data.get('pattern_id', ''),
+                pattern_data.get('type', 'journey'),
+                pattern_data.get('problem', ''),
+                pattern_data.get('attempts', ''),
+                pattern_data.get('final_outcome', ''),
+                pattern_data.get('key_learning', ''),
+                pattern_data.get('anti_patterns', ''),
+                pattern_data.get('success_factors', ''),
+                pattern_data.get('context', ''),
+                pattern_data.get('confidence', 0.5),
+                pattern_data.get('session_id', ''),
+                pattern_data.get('timestamp', datetime.now().isoformat())
+            ))
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get_anti_patterns(self, project_name: Optional[str] = None, problem: Optional[str] = None) -> List[Dict]:
+        """Retrieve anti-patterns (what to avoid)"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            if project_name and problem:
+                cursor.execute('''
+                    SELECT * FROM anti_patterns
+                    WHERE project_name = ? AND problem LIKE ?
+                    ORDER BY confidence DESC
+                    LIMIT 10
+                ''', (project_name, f'%{problem}%'))
+            elif project_name:
+                cursor.execute('''
+                    SELECT * FROM anti_patterns
+                    WHERE project_name = ?
+                    ORDER BY confidence DESC
+                    LIMIT 10
+                ''', (project_name,))
+            else:
+                cursor.execute('''
+                    SELECT * FROM anti_patterns
+                    ORDER BY confidence DESC
+                    LIMIT 10
+                ''')
+
+            anti_patterns = []
+            for row in cursor.fetchall():
+                anti_patterns.append({
+                    'id': row[0],
+                    'project': row[1],
+                    'type': row[2],
+                    'problem': row[3],
+                    'failed_approach': row[4],
+                    'error_reason': row[5],
+                    'context': json.loads(row[6]) if row[6] else {},
+                    'alternative': row[7],
+                    'confidence': row[8]
+                })
+
+            return anti_patterns
+
+        finally:
+            conn.close()
+
+    def get_journey_patterns(self, project_name: Optional[str] = None, problem: Optional[str] = None) -> List[Dict]:
+        """Retrieve journey patterns (complete problem-solving paths)"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            if project_name and problem:
+                cursor.execute('''
+                    SELECT * FROM journey_patterns
+                    WHERE project_name = ? AND problem LIKE ?
+                    ORDER BY confidence DESC
+                    LIMIT 10
+                ''', (project_name, f'%{problem}%'))
+            elif project_name:
+                cursor.execute('''
+                    SELECT * FROM journey_patterns
+                    WHERE project_name = ?
+                    ORDER BY confidence DESC
+                    LIMIT 10
+                ''', (project_name,))
+            else:
+                cursor.execute('''
+                    SELECT * FROM journey_patterns
+                    ORDER BY confidence DESC
+                    LIMIT 10
+                ''')
+
+            journey_patterns = []
+            for row in cursor.fetchall():
+                journey_patterns.append({
+                    'id': row[0],
+                    'project': row[1],
+                    'pattern_id': row[2],
+                    'type': row[3],
+                    'problem': row[4],
+                    'attempts': json.loads(row[5]) if row[5] else [],
+                    'final_outcome': row[6],
+                    'key_learning': row[7],
+                    'anti_patterns': json.loads(row[8]) if row[8] else [],
+                    'success_factors': json.loads(row[9]) if row[9] else [],
+                    'context': json.loads(row[10]) if row[10] else {},
+                    'confidence': row[11]
+                })
+
+            return journey_patterns
 
         finally:
             conn.close()

@@ -1,108 +1,521 @@
 # 📦 Claude Cache Installation Guide
 
-## Three Ways to Use Claude Cache
+Complete installation instructions for all platforms, from absolute beginner to power user.
 
-Claude Cache offers **three distinct usage modes**, each building on the previous one's capabilities:
-
-| Mode | Installation | Features | Best For |
-|------|-------------|----------|-----------|
-| **Basic** | `pip install claude-cache` | CLI tools, keyword search | Getting started |
-| **Enhanced** | `pip install claude-cache[enhanced]` | Semantic search, 2x better accuracy | Power users |
-| **MCP** | `pip install claude-cache[mcp]` | Native Claude Code tools | Ultimate experience |
+## Quick Links
+- [I'm New to Terminal/Python → Start Here](#complete-installation-from-scratch)
+- [I Have Python → Quick Install](#quick-install-if-you-have-python)
+- [macOS Step-by-Step](#macos-installation)
+- [Windows Step-by-Step](#windows-installation)
+- [Linux Instructions](#linux-installation)
 
 ---
 
-## 🚀 Mode 1: Basic Installation
+## Quick Install (If You Have Python)
 
-### Install
+If you already have Python 3.8+ and pip installed:
+
 ```bash
+# Basic install
+pip install claude-cache
+
+# Or with all features (recommended)
+pip install "claude-cache[mcp]"
+
+# Start using
+cache start
+```
+
+If the above doesn't work or you're unsure, follow the detailed instructions below.
+
+---
+
+## Complete Installation from Scratch
+
+Choose your operating system:
+- [macOS (Mac) Instructions](#macos-installation)
+- [Windows Instructions](#windows-installation)
+- [Linux Instructions](#linux-installation)
+
+---
+
+## macOS Installation
+
+### Complete Step-by-Step Guide for Mac Users
+
+#### Step 1: Open Terminal
+
+1. Press `Command + Space` to open Spotlight Search
+2. Type "Terminal" and press Enter
+3. A window with text will open - this is Terminal
+
+#### Step 2: Check if Python is Installed
+
+In Terminal, type this command and press Enter:
+
+```bash
+python3 --version
+```
+
+**What you should see:**
+- ✅ If you see `Python 3.8.x` or higher (like 3.9, 3.10, 3.11, 3.12) - Great! Skip to Step 4
+- ❌ If you see "command not found" or Python 3.7 or lower - Continue to Step 3
+
+#### Step 3: Install Python (If Needed)
+
+**Option A: Using Homebrew (Recommended)**
+
+First, check if you have Homebrew:
+```bash
+brew --version
+```
+
+If you see "command not found", install Homebrew:
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+- It will ask for your password - type it and press Enter (you won't see the characters)
+- Follow any additional instructions shown
+
+After Homebrew is installed, install Python:
+```bash
+brew install python@3.12
+```
+
+**Option B: Download from Python.org**
+
+1. Go to https://www.python.org/downloads/
+2. Click the big yellow "Download Python 3.12.x" button
+3. Open the downloaded file
+4. Follow the installer (click Continue, Agree, Install)
+
+After installation, close and reopen Terminal, then verify:
+```bash
+python3 --version
+```
+
+#### Step 4: Install pip (Python Package Manager)
+
+Check if pip is installed:
+```bash
+pip3 --version
+```
+
+If you see a version number, skip to Step 5. If not:
+
+```bash
+# Install pip
+python3 -m ensurepip --upgrade
+```
+
+#### Step 5: Handle "Externally Managed Environment" (macOS 12+)
+
+Modern macOS protects the system Python. We'll use pipx for a clean installation:
+
+```bash
+# Install pipx (isolates Claude Cache from other Python packages)
+python3 -m pip install --user pipx
+
+# Add pipx to your PATH
+python3 -m pipx ensurepath
+```
+
+**Important**: After running ensurepath:
+1. Close Terminal completely (Command + Q)
+2. Open Terminal again
+
+Verify pipx is working:
+```bash
+pipx --version
+```
+
+If "command not found", run:
+```bash
+# For zsh (default on modern macOS)
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+
+# For bash (older macOS)
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bash_profile
+source ~/.bash_profile
+```
+
+#### Step 6: Install Claude Cache
+
+**Recommended: Using pipx (Clean & Isolated)**
+```bash
+# Install with all features including MCP integration
+pipx install "claude-cache[mcp]"
+```
+
+**Alternative: Using pip with --user flag**
+```bash
+# If pipx doesn't work, try this
+pip3 install --user "claude-cache[mcp]"
+
+# Add to PATH if needed
+echo 'export PATH="$HOME/Library/Python/3.12/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+#### Step 7: Verify Installation
+
+```bash
+# Check if cache command is available
+cache --version
+
+# Should show something like:
+# Claude Cache version 0.6.1
+```
+
+If you see "command not found":
+```bash
+# Find where cache was installed
+find ~ -name cache -type f 2>/dev/null | grep -E "(bin|scripts)"
+
+# Add that directory to PATH (replace /path/to/directory with actual path)
+echo 'export PATH="/path/to/directory:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+#### Step 8: First Run
+
+```bash
+# Start Claude Cache
+cache start
+
+# You should see:
+# ✓ Knowledge base initialized at ~/.claude/knowledge/cache.db
+# Processing existing log files...
+# Starting real-time monitoring...
+```
+
+#### Step 9: Configure Claude Code Integration (Optional)
+
+Create or edit `.claude.json` in your home directory:
+
+```bash
+# Create the file
+touch ~/.claude.json
+
+# Open in text editor
+open -e ~/.claude.json
+```
+
+Add this content:
+```json
+{
+  "mcpServers": {
+    "cache": {
+      "type": "stdio",
+      "command": "cache-mcp"
+    }
+  }
+}
+```
+
+Save the file and restart Claude Code.
+
+### macOS Troubleshooting
+
+#### "Permission Denied" Error
+```bash
+# Use pipx instead of pip
+pipx install "claude-cache[mcp]"
+```
+
+#### "Externally Managed Environment" Error
+```bash
+# This is expected on modern macOS. Use pipx:
+pipx install "claude-cache[mcp]"
+
+# Or use a virtual environment:
+python3 -m venv ~/claude-env
+source ~/claude-env/bin/activate
+pip install "claude-cache[mcp]"
+```
+
+#### "Command Not Found" After Installation
+```bash
+# If using pipx
+pipx ensurepath
+# Then restart Terminal
+
+# If using pip --user
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+---
+
+## Windows Installation
+
+### Complete Step-by-Step Guide for Windows Users
+
+#### Step 1: Open PowerShell
+
+1. Press `Windows Key + X`
+2. Select "Windows PowerShell" or "Terminal"
+   - If you see "Terminal", that's perfect
+   - If only "Command Prompt", that works too
+
+#### Step 2: Check if Python is Installed
+
+In PowerShell, type:
+
+```powershell
+python --version
+```
+
+Or try:
+```powershell
+python3 --version
+```
+
+**What you should see:**
+- ✅ If you see `Python 3.8.x` or higher - Skip to Step 4
+- ❌ If you see "not recognized" or error - Continue to Step 3
+
+#### Step 3: Install Python (If Needed)
+
+1. Go to https://www.python.org/downloads/
+2. Click "Download Python 3.12.x" (big yellow button)
+3. Run the downloaded installer
+4. **CRITICAL**: ✅ Check "Add Python 3.12 to PATH" at the bottom
+5. Click "Install Now"
+6. Wait for installation
+7. Click "Close"
+
+**Verify Installation:**
+1. Close PowerShell completely
+2. Open PowerShell again
+3. Type: `python --version`
+4. Should show Python 3.12.x
+
+#### Step 4: Upgrade pip
+
+```powershell
+python -m pip install --upgrade pip
+```
+
+#### Step 5: Install pipx (Recommended for Clean Installation)
+
+```powershell
+# Install pipx
+python -m pip install --user pipx
+
+# Add to PATH
+python -m pipx ensurepath
+```
+
+**Important**: After ensurepath:
+1. Close PowerShell
+2. Open PowerShell again
+
+#### Step 6: Install Claude Cache
+
+**Option A: Using pipx (Recommended)**
+```powershell
+pipx install "claude-cache[mcp]"
+```
+
+**Option B: Using pip**
+```powershell
+pip install --user "claude-cache[mcp]"
+```
+
+#### Step 7: Verify Installation
+
+```powershell
+cache --version
+```
+
+If "not recognized":
+1. Search for "Environment Variables" in Start Menu
+2. Click "Environment Variables" button
+3. Under "User variables", find "Path" and click "Edit"
+4. Click "New" and add these (replace YOUR_USERNAME):
+   - `C:\Users\YOUR_USERNAME\AppData\Local\Programs\Python\Python312\Scripts`
+   - `C:\Users\YOUR_USERNAME\AppData\Roaming\Python\Python312\Scripts`
+   - `C:\Users\YOUR_USERNAME\.local\bin`
+5. Click OK on all windows
+6. Restart PowerShell
+
+#### Step 8: First Run
+
+```powershell
+cache start
+```
+
+#### Step 9: Configure Claude Code (Optional)
+
+1. Open Notepad:
+   ```powershell
+   notepad $env:USERPROFILE\.claude.json
+   ```
+
+2. Add this content:
+   ```json
+   {
+     "mcpServers": {
+       "cache": {
+         "type": "stdio",
+         "command": "cache-mcp"
+       }
+     }
+   }
+   ```
+
+3. Save and close
+4. Restart Claude Code
+
+### Windows Troubleshooting
+
+#### "Access Denied" Error
+1. Right-click PowerShell in Start Menu
+2. Select "Run as Administrator"
+3. Try installation again
+
+#### Long Path Support
+Enable long paths:
+1. Run PowerShell as Administrator
+2. Execute:
+   ```powershell
+   Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1
+   ```
+
+---
+
+## Linux Installation
+
+### Ubuntu/Debian
+
+```bash
+# Update package list
+sudo apt update
+
+# Install Python and pip
+sudo apt install python3 python3-pip python3-venv
+
+# Install pipx
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+
+# Restart shell
+source ~/.profile
+
+# Install Claude Cache
+pipx install "claude-cache[mcp]"
+
+# Verify
+cache --version
+```
+
+### Fedora/RHEL/CentOS
+
+```bash
+# Install Python
+sudo dnf install python3 python3-pip
+
+# Install pipx
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+
+# Restart shell
+exec $SHELL
+
+# Install Claude Cache
+pipx install "claude-cache[mcp]"
+```
+
+### Arch/Manjaro
+
+```bash
+# Install Python
+sudo pacman -S python python-pip
+
+# Install pipx
+pip install --user pipx
+python -m pipx ensurepath
+
+# Restart shell
+exec $SHELL
+
+# Install Claude Cache
+pipx install "claude-cache[mcp]"
+```
+
+---
+
+## Installation Modes Explained
+
+Once you have Python and pip/pipx installed, you can choose your installation mode:
+
+### 🚀 Mode 1: Basic Installation
+
+```bash
+# Using pipx (recommended)
+pipx install claude-cache
+
+# Or using pip
 pip install claude-cache
 ```
 
-### Features
-- ✅ All CLI commands (`cache start`, `cache query`, `cache browse`)
+**Features:**
+- ✅ All CLI commands (`cache start`, `cache query`, etc.)
 - ✅ Pattern learning and storage
-- ✅ Documentation ingestion
-- ✅ CLAUDE.md auto-generation
+- ✅ Dual-path learning (successes AND failures)
+- ✅ Journey pattern tracking
 - ✅ TF-IDF keyword search
 - ✅ Cross-project intelligence
 
-### Usage
-```bash
-# Start monitoring (keep terminal open)
-cache start
-
-# Query patterns
-cache query "authentication"
-
-# Browse documentation
-cache browse https://docs.example.com
-
-# Get statistics
-cache stats
-```
-
-### Perfect For
-- Developers starting with Claude Cache
+**Best For:**
+- Getting started with Claude Cache
 - Simple keyword-based pattern matching
-- All core functionality without dependencies
+- All core functionality without extra dependencies
 
----
+### ⚡ Mode 2: Enhanced Installation
 
-## ⚡ Mode 2: Enhanced Installation
-
-### Install
 ```bash
-pip install claude-cache[enhanced]
+# Using pipx (recommended)
+pipx install "claude-cache[enhanced]"
+
+# Or using pip
+pip install "claude-cache[enhanced]"
 ```
 
-### Additional Features
-- ✅ **Semantic Vector Search** (understands context + meaning)
-- ✅ **2x Better Pattern Matching** (finds relevant patterns even with different keywords)
+**Additional Features:**
+- ✅ **Semantic Vector Search** (understands meaning)
+- ✅ **2x Better Pattern Matching**
 - ✅ **Context Understanding** ("auth bug" finds JWT solutions)
-- ✅ **Smarter Suggestions** (AI-powered pattern recommendations)
+- ✅ **ML-Powered Intelligence**
 
-### Technical Details
-- Uses `sentence-transformers` with `all-MiniLM-L6-v2` model
-- 384-dimensional embeddings for semantic similarity
-- Automatic fallback to TF-IDF if model unavailable
-- ~2 second startup time (loads ML model)
-
-### Usage (Same CLI + Better Results)
-```bash
-# Same commands, smarter results
-cache query "authentication"
-# Now finds: JWT patterns, OAuth flows, session management
-
-cache query "slow database"
-# Now finds: connection pooling, query optimization, caching patterns
-```
-
-### Perfect For
-- Developers who want the best pattern matching
-- Projects with large knowledge bases
+**Best For:**
+- Developers wanting the best pattern matching
+- Large codebases with many patterns
 - When keyword search isn't enough
 
----
+### 🎯 Mode 3: MCP Installation (Recommended)
 
-## 🎯 Mode 3: MCP Installation (Recommended)
-
-### Install
 ```bash
-pip install claude-cache[mcp]
-```
-*Includes both enhanced search AND MCP tools*
+# Using pipx (recommended)
+pipx install "claude-cache[mcp]"
 
-### Revolutionary Features
-- ✅ **Native Claude Code Integration** (no context switching)
+# Or using pip
+pip install "claude-cache[mcp]"
+```
+
+**Ultimate Features:**
+- ✅ Everything from Enhanced mode
+- ✅ **Native Claude Code Integration**
 - ✅ **Instant Tool Access** (type `/` in Claude Code)
-- ✅ **Proactive Suggestions** (Claude suggests patterns automatically)
-- ✅ **Zero Copy/Paste** (results appear directly in Claude)
-- ✅ **Real-time Learning** (save patterns with one command)
+- ✅ **Zero Context Switching**
+- ✅ **Real-time Pattern Suggestions**
 
-### Setup (One-Time)
+**Setup MCP Tools:**
 
-1. **Add to your project's `.claude.json`:**
+1. Add to `.claude.json`:
    ```json
    {
      "mcpServers": {
@@ -114,212 +527,128 @@ pip install claude-cache[mcp]
    }
    ```
 
-2. **Or add globally to `~/.claude/claude_desktop_config.json`:**
-   ```json
-   {
-     "mcpServers": {
-       "cache": {
-         "type": "stdio",
-         "command": "cache-mcp"
-       }
-     }
-   }
-   ```
+2. Restart Claude Code
 
-3. **Restart Claude Code**
+3. Type `/` to see tools:
+   - `/mcp__cache__query` - Search patterns
+   - `/mcp__cache__learn` - Save patterns
+   - `/mcp__cache__suggest` - Get suggestions
+   - `/mcp__cache__stats` - View statistics
+   - `/mcp__cache__browse` - Index documentation
 
-### Available Tools
-
-#### `/mcp__cache__query`
-🔍 **Instant Vector Search**
-```
-Arguments:
-- query: "authentication JWT"
-- project: (optional) specific project
-- limit: max results (default: 5)
-```
-
-#### `/mcp__cache__learn`
-💾 **Save Success Patterns**
-```
-Arguments:
-- description: "JWT refresh token rotation"
-- category: "authentication"
-- code_snippet: (optional) working code
-```
-
-#### `/mcp__cache__suggest`
-💡 **Proactive Recommendations**
-```
-Arguments:
-- context: current code you're working on
-- intent: what you're trying to accomplish
-```
-
-#### `/mcp__cache__stats`
-📊 **Knowledge Base Stats**
-```
-Shows: pattern counts, search mode, project info
-```
-
-#### `/mcp__cache__browse`
-🌐 **Ingest Documentation**
-```
-Arguments:
-- url: documentation URL to index
-- project: (optional) project name
-```
-
-### Usage Examples
-
-**Before (Traditional):**
-```
-1. Code authentication
-2. Open terminal
-3. Run: cache query "auth"
-4. Copy results
-5. Paste in Claude
-6. Continue coding
-```
-
-**After (MCP Mode):**
-```
-1. Code authentication
-2. Type: /mcp__cache__query auth
-3. Get instant results in Claude
-4. Continue coding (no context switch!)
-```
-
-### Perfect For
-- Developers using Claude Code as primary IDE
-- Teams wanting seamless AI-assisted development
-- Maximum productivity and intelligence
+**Best For:**
+- Claude Code users
+- Maximum productivity
+- Seamless AI-assisted development
 
 ---
 
-## 🔧 Advanced Installation Options
+## Verification & Testing
 
-### Install Everything
-```bash
-pip install claude-cache[all]
-```
-*Gets enhanced search + MCP tools*
+### Test Your Installation
 
-### Development Installation
 ```bash
-git clone https://github.com/ga1ien/claude-cache
-cd claude-cache
-pip install -e .[all]
-```
-
-### Verify Installation
-```bash
-# Check version
+# 1. Check version
 cache --version
 
-# Test enhanced search (if installed)
-python -c "import sentence_transformers; print('✅ Enhanced search available')"
+# 2. Run diagnostics
+cache diagnose
 
-# Test MCP server (if installed)
+# 3. Test basic functionality
+cache stats
+
+# 4. Test MCP server (if installed)
 cache-mcp --version
 ```
 
----
+### Common Installation Issues
 
-## 📊 Feature Comparison Matrix
-
-| Feature | Basic | Enhanced | MCP |
-|---------|-------|----------|-----|
-| CLI Commands | ✅ | ✅ | ✅ |
-| Pattern Learning | ✅ | ✅ | ✅ |
-| Documentation Ingestion | ✅ | ✅ | ✅ |
-| TF-IDF Search | ✅ | ✅ | ✅ |
-| Semantic Search | ❌ | ✅ | ✅ |
-| Context Understanding | ❌ | ✅ | ✅ |
-| Claude Code Integration | ❌ | ❌ | ✅ |
-| Native Tools | ❌ | ❌ | ✅ |
-| Proactive Suggestions | ❌ | ❌ | ✅ |
-| Zero Context Switch | ❌ | ❌ | ✅ |
-
----
-
-## 🚀 Migration Path
-
-### From Basic → Enhanced
+#### "Module not found" Error
 ```bash
-pip install sentence-transformers
-# Automatically enables semantic search
+# Reinstall with all dependencies
+pipx reinstall "claude-cache[mcp]" --force
 ```
 
-### From Enhanced → MCP
+#### Database Permission Error
 ```bash
-pip install mcp
-# Add .claude.json configuration
-# Restart Claude Code
+# Fix permissions
+mkdir -p ~/.claude/knowledge
+chmod 755 ~/.claude
 ```
 
-### From Basic → MCP (Direct)
+#### Can't Find cache Command
 ```bash
-pip install claude-cache[mcp]
-# Configure Claude Code
-# Get all features immediately
+# Using pipx
+pipx ensurepath
+
+# Using pip
+echo $PATH  # Check if .local/bin is in PATH
 ```
 
 ---
 
-## 🔍 Troubleshooting
+## Uninstallation
 
-### Basic Mode Issues
+### Remove Claude Cache
+
+**If installed with pipx:**
 ```bash
-# If cache command not found
-pip install --upgrade claude-cache
-
-# If permission errors
-pip install --user claude-cache
+pipx uninstall claude-cache
 ```
 
-### Enhanced Mode Issues
+**If installed with pip:**
 ```bash
-# If semantic search not working
-pip install sentence-transformers
-
-# If model download fails
-python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+pip uninstall claude-cache
 ```
 
-### MCP Mode Issues
+### Remove Data (Optional)
+
 ```bash
-# If tools don't appear in Claude Code
-claude-code --mcp-debug
+# Backup first if needed
+cp -r ~/.claude ~/.claude-backup
 
-# Test MCP server directly
-cache-mcp
-
-# Check configuration
-cat .claude.json
+# Remove all Claude Cache data
+rm -rf ~/.claude
 ```
 
 ---
 
 ## 💡 Recommendations
 
-### For New Users
-Start with **Basic** → try for a week → upgrade to **Enhanced** → eventually **MCP**
+### For Absolute Beginners
+1. Follow the step-by-step OS instructions above
+2. Use pipx for installation (cleaner)
+3. Start with basic mode, upgrade later
 
-### For Power Users
-Go directly to **MCP mode** for the ultimate experience
+### For Developers
+1. Install Python 3.10+ if not present
+2. Use pipx for isolation
+3. Go directly to MCP mode
 
 ### For Teams
-Use **MCP mode** with shared `.claude.json` configuration
+1. Standardize on Python 3.10+
+2. Use MCP mode with shared configuration
+3. Consider Docker for consistency
+
+---
+
+## Getting Help
+
+If you encounter issues:
+
+1. **Run diagnostics**: `cache diagnose`
+2. **Check documentation**: See other docs in this folder
+3. **Report issues**: https://github.com/Alyks1/claude-cache/issues
 
 ---
 
 ## 🎯 Next Steps
 
-1. **Choose your mode** based on needs
-2. **Install** using the commands above
-3. **Configure** MCP if using Mode 3
-4. **Start learning patterns** with `cache start` or `/mcp__cache__learn`
-5. **Query intelligence** with `cache query` or `/mcp__cache__query`
+Once installed:
 
-**Happy coding with Claude Cache!** 🚀
+1. **Start Claude Cache**: `cache start`
+2. **Read Quick Start**: [QUICK_START.md](QUICK_START.md)
+3. **Configure**: [CONFIGURATION.md](CONFIGURATION.md)
+4. **Learn More**: [HOW_IT_WORKS.md](HOW_IT_WORKS.md)
+
+**Ready to never repeat the same mistake twice!** 🚀

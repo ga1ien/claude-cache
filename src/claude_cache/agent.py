@@ -75,6 +75,12 @@ class CacheAgent:
     def process_existing_logs(self):
         """Process all existing log files with progress tracking"""
         try:
+            # Initialize watcher if not already done
+            if self.watcher is None:
+                self.watcher = LogWatcher(self.processor, silent=False)
+                self.injector = ContextInjector(self.kb, silent=False)
+                self.realtime_updater = RealtimeContextUpdater(self.kb, self.injector)
+
             # First, count how many logs we have
             projects_dir = Path.home() / '.claude' / 'projects'
             log_count = len(list(projects_dir.glob('**/*.jsonl'))) if projects_dir.exists() else 0
