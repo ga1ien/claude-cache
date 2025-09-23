@@ -440,7 +440,7 @@ Claude will now reference these patterns automatically!"""
                 streams[1],  # write stream
                 InitializationOptions(
                     server_name="claude-cache",
-                    server_version="0.6.0"
+                    server_version="0.7.0"
                 )
             )
 
