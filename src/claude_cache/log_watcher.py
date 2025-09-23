@@ -127,19 +127,22 @@ class LogWatcher:
                 console.print("[dim]Logs will be created when you use Claude Code[/dim]")
             return
 
-        if not getattr(self, 'silent', False):
+        # In silent mode, process files without any output
+        if getattr(self, 'silent', False):
+            # Just process files silently - LogProcessor handles incremental updates
+            for log_file in log_files:
+                self.log_processor.process_file(str(log_file))
+        else:
+            # Verbose mode - show progress
             console.print(f"[blue]Processing {len(log_files)} existing log files...[/blue]")
 
-        processed_count = 0
-        for log_file in log_files:
-            project_name = self._clean_project_name(log_file.parent.name)
-            # Show progress for each file only if not silent
-            if not getattr(self, 'silent', False):
+            processed_count = 0
+            for log_file in log_files:
+                project_name = self._clean_project_name(log_file.parent.name)
                 console.print(f"  Processing: {project_name}/{log_file.name}")
 
-            # Process the file - this will handle incremental processing
-            self.log_processor.process_file(str(log_file))
-            processed_count += 1
+                # Process the file - this will handle incremental processing
+                self.log_processor.process_file(str(log_file))
+                processed_count += 1
 
-        if not getattr(self, 'silent', False):
             console.print(f"[green]✓ Finished processing {processed_count} log files[/green]")
