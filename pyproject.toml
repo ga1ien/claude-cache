@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "claude-cache"
-version = "0.9.1"
+version = "0.9.2"
 description = "Perfect memory for Claude - Never solve the same coding problem twice"
 readme = "README.md"
 license = {text = "MIT"}
@@ -63,7 +63,6 @@ all = [
 [project.scripts]
 cache = "claude_cache.cli:main"
 cache-mcp = "claude_cache.claude_code_mcp:main"
-cache-mcp-legacy = "claude_cache.fastmcp_server:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

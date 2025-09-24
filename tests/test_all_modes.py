@@ -75,11 +75,11 @@ def test_mcp_mode():
         import mcp
         console.print("✅ MCP library available")
 
-        from claude_cache.complete_mcp import app
+        from claude_cache.claude_code_mcp import mcp
         console.print("✅ MCP server module loaded")
 
         # Test if we can get tools list
-        tools = []
+        tools = mcp.list_tools() if hasattr(mcp, 'list_tools') else []
         console.print("✅ MCP server tools accessible")
         console.print("✅ Ready for Claude Code integration")
 
