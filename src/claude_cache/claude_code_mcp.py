@@ -427,6 +427,20 @@ async def cache_stats() -> str:
                 emoji = {'gold': '🏆', 'silver': '✨', 'bronze': '🥉'}.get(quality, '📝')
                 output.append(f"   {emoji} {quality}: {count}")
 
+        # Add search capabilities info
+        output.append("\n🔍 Search Capabilities:")
+        if kb.vector_search:
+            caps = kb.vector_search.get_capabilities()
+            if caps['mode'] == 'semantic':
+                output.append("   Mode: Semantic Search ✨")
+                output.append(f"   Model: {caps['model']}")
+                output.append("   Features: Understanding context and meaning")
+            else:
+                output.append("   Mode: TF-IDF ⚡")
+                output.append("   Features: Fast keyword matching")
+        else:
+            output.append("   Mode: Basic keyword search")
+
         # Current session status
         if current_session['entries']:
             output.append(f"\n🔄 Current session: {len(current_session['entries'])} entries")
