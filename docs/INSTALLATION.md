@@ -180,7 +180,7 @@ source ~/.zshrc
 cache --version
 
 # Should show something like:
-# Claude Cache version 0.6.1
+# Claude Cache version 0.9.0
 ```
 
 If you see "command not found":

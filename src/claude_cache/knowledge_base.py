@@ -27,6 +27,9 @@ class KnowledgeBase:
         self.db_path = str(db_path)
         self.setup_database()
 
+        # Ensure all tables exist (migration for existing users)
+        self.ensure_all_tables_exist()
+
         # Initialize vector search engine (with automatic fallback)
         self.vector_search = VectorSearchEngine(db_path, silent=self.silent)
 
@@ -51,6 +54,8 @@ class KnowledgeBase:
                 key_operations TEXT,
                 timestamp DATETIME,
                 success_score REAL,
+                pattern_quality TEXT DEFAULT 'bronze',
+                signal_strength TEXT DEFAULT 'weak',
                 tags TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
@@ -154,10 +159,30 @@ class KnowledgeBase:
             )
         ''')
 
+        # Performance optimizations: Add indexes on frequently queried columns
         cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_patterns_project
             ON success_patterns(project_name)
         ''')
+
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_patterns_timestamp
+            ON success_patterns(timestamp)
+        ''')
+
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_patterns_score
+            ON success_patterns(success_score)
+        ''')
+
+        # Only create index if column exists (handled by migration)
+        cursor.execute("PRAGMA table_info(success_patterns)")
+        columns = [col[1] for col in cursor.fetchall()]
+        if 'pattern_quality' in columns:
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_patterns_quality
+                ON success_patterns(pattern_quality)
+            ''')
 
         cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_conventions_project
@@ -178,8 +203,9 @@ class KnowledgeBase:
         cursor.execute('''
             INSERT INTO success_patterns
             (project_name, request_type, user_request, approach, files_involved,
-             solution_steps, key_operations, timestamp, success_score, tags)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             solution_steps, key_operations, timestamp, success_score, tags,
+             pattern_quality, signal_strength)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             project_name,
             pattern.get('request_type', 'unknown'),
@@ -190,7 +216,9 @@ class KnowledgeBase:
             json.dumps(pattern.get('key_operations', [])),
             pattern.get('timestamp', datetime.now().isoformat()),
             success_score,
-            json.dumps(pattern.get('tags', []))
+            json.dumps(pattern.get('tags', [])),
+            pattern.get('pattern_quality', 'bronze'),
+            pattern.get('signal_strength', 'medium')
         ))
 
         pattern_id = cursor.lastrowid
@@ -315,7 +343,7 @@ class KnowledgeBase:
 
                         cursor.execute('''
                             SELECT id, user_request, approach, solution_steps, success_score,
-                                   files_involved, key_operations
+                                   files_involved, key_operations, pattern_quality, signal_strength
                             FROM success_patterns
                             WHERE id = ? OR user_request = ?
                         ''', (numeric_id, result.get('text', '')))
@@ -332,6 +360,8 @@ class KnowledgeBase:
                                 'files_involved': json.loads(pattern_data[5]) if pattern_data[5] else [],
                                 'key_operations': json.loads(pattern_data[6]) if pattern_data[6] else [],
                                 'success_score': pattern_data[4],
+                                'pattern_quality': pattern_data[7] if len(pattern_data) > 7 else 'bronze',
+                                'signal_strength': pattern_data[8] if len(pattern_data) > 8 else 'medium',
                                 'similarity': result['similarity'],
                                 'search_mode': result.get('search_mode', 'unknown')
                             })
@@ -346,7 +376,8 @@ class KnowledgeBase:
         cursor = conn.cursor()
 
         cursor.execute('''
-            SELECT id, user_request, approach, solution_steps, success_score, files_involved, key_operations
+            SELECT id, user_request, approach, solution_steps, success_score, files_involved, key_operations,
+                   pattern_quality, signal_strength
             FROM success_patterns
             WHERE project_name = ?
             ORDER BY success_score DESC
@@ -368,8 +399,12 @@ class KnowledgeBase:
             similarities = [0] * len(patterns)
 
         similar_patterns = []
-        for i, (pattern_id, request, approach, steps, score, files, operations) in enumerate(patterns):
+        for i, pattern in enumerate(patterns):
             if similarities[i] > threshold:
+                pattern_id, request, approach, steps, score, files, operations = pattern[:7]
+                pattern_quality = pattern[7] if len(pattern) > 7 else 'bronze'
+                signal_strength = pattern[8] if len(pattern) > 8 else 'medium'
+
                 similar_patterns.append({
                     'id': pattern_id,
                     'request': request,
@@ -378,6 +413,8 @@ class KnowledgeBase:
                     'files_involved': json.loads(files) if files else [],
                     'key_operations': json.loads(operations) if operations else [],
                     'success_score': score,
+                    'pattern_quality': pattern_quality,
+                    'signal_strength': signal_strength,
                     'similarity': similarities[i],
                     'search_mode': 'tfidf'
                 })
@@ -843,7 +880,9 @@ class KnowledgeBase:
                     'approach': row[3],
                     'files_involved': json.loads(row[4]) if row[4] else [],
                     'solution_steps': json.loads(row[5]) if row[5] else [],
-                    'timestamp': row[6]
+                    'timestamp': row[6],
+                    'pattern_quality': row[7] if len(row) > 7 else 'bronze',
+                    'signal_strength': row[8] if len(row) > 8 else 'medium'
                 }
                 patterns.append(pattern)
 
@@ -1000,6 +1039,141 @@ class KnowledgeBase:
                 })
 
             return journey_patterns
+
+        finally:
+            conn.close()
+
+    def ensure_all_tables_exist(self):
+        """Ensure all required tables exist - for migration and new installs"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        # Check which tables exist
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        existing_tables = [row[0] for row in cursor.fetchall()]
+
+        # Add new columns to success_patterns if they don't exist
+        if 'success_patterns' in existing_tables:
+            # Check if pattern_quality column exists
+            cursor.execute("PRAGMA table_info(success_patterns)")
+            columns = [col[1] for col in cursor.fetchall()]
+
+            if 'pattern_quality' not in columns:
+                cursor.execute("ALTER TABLE success_patterns ADD COLUMN pattern_quality TEXT DEFAULT 'bronze'")
+                if not self.silent:
+                    console.print("[green]✓ Added pattern_quality column[/green]")
+
+            if 'signal_strength' not in columns:
+                cursor.execute("ALTER TABLE success_patterns ADD COLUMN signal_strength TEXT DEFAULT 'weak'")
+                if not self.silent:
+                    console.print("[green]✓ Added signal_strength column[/green]")
+
+        # Create anti_patterns table if it doesn't exist
+        if 'anti_patterns' not in existing_tables:
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS anti_patterns (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    project_name TEXT NOT NULL,
+                    pattern_type TEXT,
+                    problem TEXT,
+                    failed_approach TEXT,
+                    error_reason TEXT,
+                    context TEXT,
+                    alternative_solution TEXT,
+                    confidence REAL,
+                    timestamp DATETIME,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            if not self.silent:
+                console.print("[green]✓ Created anti_patterns table[/green]")
+
+        # Create journey_patterns table if it doesn't exist
+        if 'journey_patterns' not in existing_tables:
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS journey_patterns (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    project_name TEXT NOT NULL,
+                    pattern_id TEXT UNIQUE,
+                    pattern_type TEXT,
+                    problem TEXT,
+                    attempts TEXT,
+                    final_outcome TEXT,
+                    key_learning TEXT,
+                    anti_patterns TEXT,
+                    success_factors TEXT,
+                    context TEXT,
+                    confidence REAL,
+                    session_id TEXT,
+                    timestamp DATETIME,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            if not self.silent:
+                console.print("[green]✓ Created journey_patterns table[/green]")
+
+        conn.commit()
+        conn.close()
+
+    def migrate_fragmented_projects(self):
+        """Migrate patterns from fragmented project names to consolidated ones"""
+        # Import here to avoid circular import
+        from .log_processor import LogEntry
+
+        conn = sqlite3.connect(self.db_path)
+        try:
+            cursor = conn.cursor()
+
+            # Create a dummy LogEntry to use the consolidation logic
+            dummy_entry = LogEntry({'cwd': ''}, '')
+
+            # Get all unique project names
+            cursor.execute('SELECT DISTINCT project_name FROM success_patterns')
+            projects = [row[0] for row in cursor.fetchall()]
+
+            # Track migrations
+            migrations = {}
+
+            for project in projects:
+                consolidated = dummy_entry._consolidate_project_name(project)
+                if consolidated != project:
+                    if consolidated not in migrations:
+                        migrations[consolidated] = []
+                    migrations[consolidated].append(project)
+
+            # Perform migrations
+            for target_project, source_projects in migrations.items():
+                if not self.silent:
+                    print(f"Consolidating {', '.join(source_projects)} → {target_project}")
+
+                # Update success_patterns
+                for source in source_projects:
+                    cursor.execute('''
+                        UPDATE success_patterns
+                        SET project_name = ?
+                        WHERE project_name = ?
+                    ''', (target_project, source))
+
+                # Update anti_patterns
+                for source in source_projects:
+                    cursor.execute('''
+                        UPDATE anti_patterns
+                        SET project_name = ?
+                        WHERE project_name = ?
+                    ''', (target_project, source))
+
+                # Update journey_patterns
+                for source in source_projects:
+                    cursor.execute('''
+                        UPDATE journey_patterns
+                        SET project_name = ?
+                        WHERE project_name = ?
+                    ''', (target_project, source))
+
+            conn.commit()
+
+            if migrations and not self.silent:
+                print(f"Successfully consolidated {len(sum(migrations.values(), []))} fragmented projects into {len(migrations)} consolidated projects")
 
         finally:
             conn.close()

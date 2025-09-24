@@ -413,7 +413,20 @@ class CacheAgent:
         """Generate a status table for live display"""
         stats = self.kb.get_statistics()
         patterns = stats.get('total_patterns', 0)
-        projects = stats.get('projects', 0)
+        projects_data = stats.get('projects', [])
+
+        # Handle both old (number) and new (list) format for backward compatibility
+        if isinstance(projects_data, list):
+            project_count = len(projects_data)
+            # Generate clean project summary
+            if projects_data:
+                current_project = projects_data[0]['name'] if projects_data else "None"
+                project_summary = f"{current_project} + {project_count-1} others" if project_count > 1 else current_project
+            else:
+                project_summary = "None yet"
+        else:
+            project_count = projects_data
+            project_summary = f"{project_count} projects"
 
         # Get most active project
         most_active = self._get_most_active_project()
@@ -423,11 +436,11 @@ class CacheAgent:
 
         table = Table(title="🧠 Claude Cache - Live Monitoring", show_header=True, border_style="blue")
         table.add_column("Metric", style="cyan", width=22)
-        table.add_column("Value", style="green", width=20)
+        table.add_column("Value", style="green", width=50)
         table.add_column("Status", style="yellow", width=35)
 
         table.add_row("Patterns Learned", str(patterns), self._get_pattern_status(patterns))
-        table.add_row("Projects Tracked", str(projects), f"Monitoring ~/.claude/projects/")
+        table.add_row("Projects Tracked", project_summary, f"Monitoring ~/.claude/projects/")
         table.add_row("Most Active", most_active or "None yet", "Current session leader")
         table.add_row("Recent Activity", f"{recent_patterns} today", "New patterns detected")
         table.add_row("Status", "[green]● Watching[/green]", f"Updated {datetime.now().strftime('%H:%M:%S')}")

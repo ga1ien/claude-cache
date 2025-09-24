@@ -45,13 +45,13 @@ Friday: Hit similar auth issue
 - ✅ "Use httpOnly cookies with SameSite=strict"
 - 🗺️ "Journey: localStorage → sessionStorage → cookies → httpOnly ✓"
 
-### Five Pillars of Intelligence
+### Five Pillars of Intelligence (v0.9.0)
 
-1. **Dual-Path Learning** - Captures successes AND failures
-2. **Journey Patterns** - Records complete problem-solving paths
-3. **Pattern Classification** - Gold/Silver/Bronze/Anti/Journey/Caution
-4. **Semantic Understanding** - Knows "auth broken" relates to "JWT failing"
-5. **Instant Retrieval** - Sub-100ms access to thousands of patterns
+1. **🤖 Multi-Signal Detection** - Combines conversation flow, execution results, user intent, and behavioral patterns
+2. **🧠 Behavioral Understanding** - Detects implicit success when "AI says done + user moves on"
+3. **⚡ Auto-Save Intelligence** - Automatically saves high-confidence patterns without interrupting workflow
+4. **🎯 Context Awareness** - Knows if you're exploring vs implementing vs testing
+5. **📊 Quality Classification** - GOLD/SILVER/BRONZE/ANTI with confidence levels
 
 ### Privacy & Security
 
@@ -80,12 +80,16 @@ Friday: Hit similar auth issue
         └───────────┬───────────────┘
                     │
     ┌───────────────▼────────────────────┐
-    │    🧠 Dual-Path Learning Engine     │
+    │    🤖 Intelligent Learning Engine   │
     │  ┌─────────────────────────────┐   │
-    │  │  Success Pattern Detector   │   │
-    │  │  Anti-Pattern Analyzer      │   │
-    │  │  Journey Pattern Tracker    │   │
-    │  │  Pattern Classifier         │   │
+    │  │  🧠 IntelligentDetector      │   │
+    │  │   ├─ Conversation Analyzer  │   │
+    │  │   ├─ Execution Monitor      │   │
+    │  │   ├─ Intent Detector        │   │
+    │  │   └─ Behavioral Analyzer    │   │
+    │  │  ⚡ Multi-Signal Fusion     │   │
+    │  │  🎯 Pattern Classifier      │   │
+    │  │  💾 Auto-Save Engine        │   │
     │  └─────────────────────────────┘   │
     └────────────────────────────────────┘
                     │

@@ -10,6 +10,7 @@ from .error_pattern_learner import ErrorPatternLearner
 from .differential_learner import DifferentialLearner
 from .cross_project_intelligence import CrossProjectIntelligence
 from .dual_path_detector import DualPathDetector
+from .pattern_factory import PatternDetectorFactory
 
 console = Console()
 
@@ -30,42 +31,44 @@ class LogEntry:
 
     @property
     def project_name(self) -> str:
-        """Extract project name from cwd field or fall back to file path"""
-        # First try to use the cwd field from the log data
+        """Extract project name from cwd field - simple and direct"""
+        # Use the cwd field from the log data (most reliable)
         if self.cwd:
             cwd_path = Path(self.cwd)
-            # Get the last component of the path as the project name
             project = cwd_path.name
-            # Handle special cases where project might be in a subdirectory
-            if project in ['src', 'lib', 'app', 'client', 'server', 'frontend', 'backend']:
-                # Use parent directory name instead
-                project = cwd_path.parent.name
-            return project
 
-        # Fallback to file path extraction (for older logs without cwd)
+            # Skip common subdirectory names
+            if project in ['src', 'lib', 'app', 'client', 'server', 'frontend', 'backend', 'test', 'tests']:
+                project = cwd_path.parent.name
+
+            # Simple cleanup
+            return self._clean_project_name(project)
+
+        # Fallback for old logs
         path = Path(self.source_file)
         if path.parent.name == 'projects':
             return 'unknown'
 
-        # Clean up directory-based project names
-        raw_name = path.parent.name
+        return self._clean_project_name(path.parent.name)
 
-        # Remove common prefixes like "-Users-username-Development-"
-        if raw_name.startswith('-Users-'):
-            # Extract just the actual project name
-            parts = raw_name.split('-')
-            # Find where "Development" or similar folder ends
-            for i, part in enumerate(parts):
-                if part in ['Development', 'Documents', 'Projects', 'Code', 'Work']:
-                    # Return everything after the common folder
-                    if i + 1 < len(parts):
-                        return '-'.join(parts[i+1:])
-            # If no common folder found, take last meaningful part
-            meaningful_parts = [p for p in parts if p and p not in ['Users', '']]
-            if len(meaningful_parts) > 2:
-                return meaningful_parts[-1]
+    def _clean_project_name(self, project: str) -> str:
+        """Simple project name cleanup - no complex consolidation"""
+        import re
 
-        return raw_name
+        project = project.lower()
+
+        # Remove version numbers (v1.0, v2, etc)
+        project = re.sub(r'-v?\d+(\.\d+)*$', '', project)
+
+        # Remove dates (2024-01-01)
+        project = re.sub(r'-\d{4}-\d{2}-\d{2}$', '', project)
+
+        # Remove common branch suffixes
+        for suffix in ['-main', '-master', '-dev', '-prod', '-test']:
+            if project.endswith(suffix):
+                return project[:-len(suffix)]
+
+        return project
 
     def is_user_message(self) -> bool:
         return self.type == 'user_message'

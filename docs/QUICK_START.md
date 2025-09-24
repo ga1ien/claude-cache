@@ -98,6 +98,17 @@ The first run processes all your history. This takes:
 
 After this initial processing, it runs in real-time with zero lag.
 
+### 🤖 New in v0.9.0: Intelligent Detection
+
+Claude Cache now uses **truly intelligent pattern detection** that understands your conversations:
+
+- **Behavioral Understanding**: Detects success when Claude says "done" and you move to the next task
+- **Multi-Signal Analysis**: Combines conversation flow, test results, user intent, and behavior
+- **Auto-Save**: Automatically saves high-confidence patterns without interrupting your workflow
+- **Context Awareness**: Knows if you're exploring vs implementing solutions
+
+**What This Means**: Instead of saying "Perfect!" to save patterns, Claude Cache now understands when something works by analyzing your behavior and conversation context.
+
 ### Step 3: Start Coding!
 
 Just use Claude Code normally. Claude Cache now:
@@ -138,6 +149,10 @@ cache suggest
 
 # See what you've learned
 cache stats
+
+# NEW v0.9.0: Analyze sessions with intelligent detection
+cache analyze --recent              # Analyze most recent session
+cache analyze --project myapp       # Analyze sessions from project
 ```
 
 ### Example Output
@@ -183,9 +198,12 @@ For seamless Claude Code integration, add to your `.claude.json`:
 }
 ```
 
-Now you can use these commands directly in Claude Code:
-- `/cache query [topic]` - Search patterns
-- `/cache suggest` - Get contextual suggestions
+Now you can use these intelligent MCP tools directly in Claude Code:
+- `cache_query("topic")` - Intelligent pattern search with behavioral context
+- `cache_suggest()` - Proactive suggestions based on conversation analysis
+- `cache_analyze()` - Real-time analysis of current session
+- `cache_save()` - Smart pattern saving with quality classification
+- `cache_stats()` - Knowledge base intelligence dashboard
 - `/cache learn [solution]` - Save a pattern
 
 ## Background Mode

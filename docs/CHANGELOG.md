@@ -5,6 +5,68 @@ All notable changes to Claude Cache will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2025-01-24
+
+### Added
+- **🤖 Intelligent Multi-Signal Detection** - Revolutionary pattern detection beyond keywords
+  - IntelligentDetector with conversation flow analysis and context understanding
+  - Behavioral pattern recognition: "AI completion → user continuation = implicit success"
+  - Multi-signal fusion combining 4 analysis techniques (conversation, execution, intent, behavioral)
+  - Auto-save for high-confidence patterns without interrupting workflow
+  - Confidence levels: CERTAIN/HIGH/MEDIUM/LOW/UNCERTAIN
+
+- **📊 CLI Analyze Command** - `cache analyze` for deep session analysis
+  - Analyze specific sessions, recent sessions, or by project
+  - Visual breakdown of detection confidence and signal strength
+  - Evidence summary showing conversation, execution, intent, and behavioral scores
+  - Pattern quality assessment and recommendations
+
+- **🎯 Enhanced Pattern Classification**
+  - Database migration adds `pattern_quality` and `signal_strength` columns
+  - Improved pattern storage with quality metadata
+  - Better retrieval with quality-based filtering
+
+- **⚡ Optimized MCP Server** - Claude Code integration improvements
+  - Real-time streaming detection for live pattern analysis
+  - Smart auto-save triggers based on user behavior
+  - Context-aware suggestions that understand current conversation phase
+  - Session tracking for continuous learning
+
+### Changed
+- **Pattern Detection Priority** - IntelligentDetector now primary detection method
+  - PatternFactory prioritizes intelligent → behavioral → enhanced → basic detection
+  - Success detection moved from keyword-based to conversation understanding
+  - Test results now treated as strongest success signals
+
+- **Database Schema Evolution** - Graceful migration system
+  - Existing users automatically get new columns added
+  - Backward compatibility maintained for all existing patterns
+  - Enhanced queries include pattern quality and signal strength
+
+- **MCP Server Architecture** - Rebuilt for Claude Code optimization
+  - Entry point changed to `claude_code_mcp:main` for better performance
+  - Real-time conversation analysis with session state tracking
+  - Intelligent recommendation system based on conversation context
+
+### Technical
+- **New Core Modules**:
+  - `intelligent_detector.py` - Multi-signal fusion detection engine
+  - `conversation_analyzer.py` - Deep conversation flow understanding
+  - `execution_monitor.py` - Code execution result analysis
+  - `intent_detector.py` - Semantic user intent detection
+  - `behavioral_detector.py` - Simplified behavioral pattern recognition
+
+- **Enhanced Integration**:
+  - All new modules registered in `__init__.py` with graceful fallbacks
+  - PatternFactory updated to use intelligent detection by default
+  - Database queries updated to include new quality metrics
+  - Version bumped across all components
+
+- **Improved User Experience**:
+  - Silent operation mode for background processes
+  - Rich console output for CLI analyze command
+  - Better error handling and import safety
+
 ## [0.6.1] - 2025-01-21
 
 ### Fixed
@@ -207,6 +269,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v0.9.0** - Revolutionary intelligence: Multi-signal detection with behavioral understanding
 - **v0.6.1** - Production fix: Stable MCP server with FastMCP pattern
 - **v0.6.0** - MCP integration: Native Claude Code tools with 5 slash commands
 - **v0.5.0** - Hybrid search: Vector embeddings with graceful TF-IDF fallback

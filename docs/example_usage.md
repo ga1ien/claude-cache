@@ -1,6 +1,6 @@
-# Claude Cache v0.6.0 - Example Usage
+# Claude Cache v0.9.0 - Example Usage
 
-Claude Cache v0.6.0 offers three distinct usage modes. Here are practical examples for each.
+Claude Cache v0.9.0 offers three distinct usage modes with revolutionary intelligent detection. Here are practical examples for each.
 
 ---
 

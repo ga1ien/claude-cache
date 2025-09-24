@@ -613,4 +613,4 @@ tmux attach -t cache # Reattach session
 2. **Power users**: Go directly to MCP mode for ultimate experience
 3. **Teams**: Use MCP mode with shared .claude.json configuration
 
-**Happy coding with Claude Cache v0.6.0! 🚀**
+**Happy coding with Claude Cache v0.9.0! 🚀**

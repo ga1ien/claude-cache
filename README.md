@@ -4,9 +4,9 @@
                               claude
  ██████╗ █████╗  ██████╗██╗  ██╗███████╗
 ██╔════╝██╔══██╗██╔════╝██║  ██║██╔════╝
-██║     ███████║██║     ███████║█████╗
-██║     ██╔══██║██║     ██╔══██║██╔══╝
-╚██████╗██║  ██║╚██████╗██║  ██║███████╗
+██║     ███████║██║     ███████║█████╗      v0.9.0
+██║     ██╔══██║██║     ██╔══██║██╔══╝   🤖 Intelligent
+╚██████╗██║  ██║╚██████╗██║  ██║███████╗    Detection
  ╚═════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝
 ```
 
@@ -14,7 +14,7 @@
 [![Python Support](https://img.shields.io/pypi/pyversions/claude-cache)](https://pypi.org/project/claude-cache/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Your personal coding intelligence that learns from both successes AND failures. Claude Cache captures your complete problem-solving journey - what works, what doesn't, and the path between them.**
+**Your personal coding intelligence that learns from both successes AND failures. Claude Cache captures your complete problem-solving journey using truly intelligent conversation understanding - no more keyword guessing.**
 
 ## 🧠 Learning from Everything, Storing What Matters
 
@@ -193,9 +193,26 @@ cache stats
 # Search existing patterns
 cache query "authentication"
 
-# Get suggestions
-cache suggest --context "working on APIs"
+# Get contextual suggestions
+cache suggest
 ```
+
+## 🤖 Intelligent Pattern Detection
+
+Claude Cache v0.9.0 introduces truly intelligent success detection that goes beyond simple keywords:
+
+### 🧠 **Multi-Signal Fusion**
+Combines four analysis techniques for accurate pattern detection:
+1. **Conversation Flow Analysis** - Understands the natural progression of problem-solving
+2. **Execution Results** - Prioritizes test passes, build success, and error resolution
+3. **User Intent Detection** - Analyzes what you're actually trying to accomplish
+4. **Behavioral Patterns** - Recognizes implicit success signals like moving to the next task
+
+### 💡 **Smart Success Detection**
+- **Implicit Success**: When Claude says "done" and you continue to the next problem = success
+- **Test Prioritization**: Passing tests are the strongest success signal
+- **Context Understanding**: Knows the difference between exploration and implementation phases
+- **Auto-Save**: Automatically saves high-confidence patterns without interrupting your flow
 
 ## 🔬 How It Works
 
@@ -214,10 +231,11 @@ Claude Cache uses dual-path learning to build comprehensive intelligence:
 - Records complete problem→solution journeys
 - Zero lag - runs silently in background
 
-### 3. **Intelligent Retrieval**
-- **Semantic Search**: ML-powered understanding of meaning
-- **Pattern Matching**: Finds similar problems across projects
-- **Context Awareness**: Right solution for your specific stack
+### 3. **Intelligent Detection & Retrieval**
+- **Multi-Signal Analysis**: Combines conversation flow, execution results, user behavior, and intent
+- **Behavioral Understanding**: Detects success when AI says "done" and user moves to next task
+- **Semantic Search**: ML-powered understanding of meaning beyond keywords
+- **Context Awareness**: Right solution for your specific stack and current problem
 - **Journey Replay**: Shows the path that worked before
 
 ### 4. **Privacy First Design**
@@ -297,8 +315,8 @@ cache background
 # Search patterns
 cache query "authentication patterns"
 
-# Get suggestions
-cache suggest --context "working on APIs"
+# Get contextual suggestions
+cache suggest
 
 # View statistics
 cache stats
@@ -343,6 +361,48 @@ cache scan-docs .  # Scan current repository
 # Export/import knowledge
 cache export backup.json
 cache import backup.json
+```
+
+### **🤖 Intelligent Analysis (v0.9.0)**
+```bash
+# Analyze conversation sessions with intelligent detection
+cache analyze --recent                    # Most recent session
+cache analyze --project myapp            # Sessions from specific project
+cache analyze --session-file session.jsonl  # Specific session file
+
+# Quick pattern capture
+cache win "JWT refresh token implementation"     # Save successful solution
+cache fail "localStorage for tokens" --why "security risk" --alternative "httpOnly cookies"
+
+# Recent pattern monitoring
+cache recent                             # Last 24 hours
+cache recent --today                     # Today only
+cache recent --week --watch             # Last week with live updates
+
+# Project management
+cache project list                       # List all projects
+cache project set myapp                  # Set default project
+cache project                           # Show current context
+```
+
+### **📊 Advanced Features**
+```bash
+# Interactive monitoring dashboard
+cache monitor                           # Live pattern detection
+cache monitor --duration 30            # Monitor for 30 seconds
+
+# Pattern quality filtering
+cache query "auth" --gold               # Only high-quality patterns
+cache query "database" --anti           # Show what NOT to do
+cache query "testing" --journey         # Show problem→solution paths
+
+# Documentation search
+cache search-docs "API rate limiting"   # Search indexed docs
+cache scan-docs . --project webapp     # Index current repository
+
+# System maintenance
+cache rebuild                           # Rebuild knowledge base
+cache rebuild --confirm                 # Skip confirmation prompt
 ```
 
 ### **🛠️ Process Control**

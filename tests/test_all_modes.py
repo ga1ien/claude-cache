@@ -128,7 +128,7 @@ def show_installation_guide():
 def main():
     """Main test runner"""
     console.print(Panel.fit(
-        "[bold cyan]Claude Cache v0.6.0 - Mode Testing[/bold cyan]\n" +
+        "[bold cyan]Claude Cache v0.9.0 - Mode Testing[/bold cyan]\n" +
         "Testing all three usage modes to ensure they work correctly",
         title="🧪 Test Suite"
     ))

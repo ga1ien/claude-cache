@@ -15,9 +15,9 @@ console = Console()
 ASCII_ART = """                              claude
  ██████╗ █████╗  ██████╗██╗  ██╗███████╗
 ██╔════╝██╔══██╗██╔════╝██║  ██║██╔════╝
-██║     ███████║██║     ███████║█████╗
-██║     ██╔══██║██║     ██╔══██║██╔══╝
-╚██████╗██║  ██║╚██████╗██║  ██║███████╗
+██║     ███████║██║     ███████║█████╗      v0.9.0
+██║     ██╔══██║██║     ██╔══██║██╔══╝   🤖 Intelligent
+╚██████╗██║  ██║╚██████╗██║  ██║███████╗    Detection
  ╚═════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝"""
 
 
@@ -95,6 +95,133 @@ def query(query, project, code, preview, gold, anti, journey, limit, db):
         agent.query_patterns(query, project, filters)
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")
+        sys.exit(1)
+
+
+@cli.command()
+@click.option('--session-file', type=click.Path(exists=True), help='Analyze specific session file')
+@click.option('--recent', is_flag=True, help='Analyze most recent session')
+@click.option('--project', '-p', help='Analyze sessions from specific project')
+@click.option('--db', type=click.Path(), help='Custom database path')
+def analyze(session_file, recent, project, db):
+    """Analyze conversation sessions using intelligent detection"""
+    try:
+        from .intelligent_detector import IntelligentDetector
+        from .log_processor import LogProcessor
+        import json
+        from rich.panel import Panel
+        from rich.columns import Columns
+
+        agent = CacheAgent(db)
+        detector = IntelligentDetector()
+        processor = LogProcessor(agent.kb)
+
+        # Find sessions to analyze
+        sessions_to_analyze = []
+
+        if session_file:
+            sessions_to_analyze = [Path(session_file)]
+        elif recent:
+            # Find most recent session
+            log_dir = Path.home() / ".claude" / "logs"
+            if log_dir.exists():
+                sessions = sorted(log_dir.glob("*.jsonl"), key=lambda x: x.stat().st_mtime, reverse=True)
+                if sessions:
+                    sessions_to_analyze = [sessions[0]]
+        elif project:
+            # Find sessions for specific project
+            log_dir = Path.home() / ".claude" / "logs"
+            if log_dir.exists():
+                sessions = list(log_dir.glob("*.jsonl"))
+                # Filter by project name in filename or content - simplified approach
+                sessions_to_analyze = [s for s in sessions if project.lower() in s.name.lower()][:5]
+        else:
+            # Default: analyze last 3 sessions
+            log_dir = Path.home() / ".claude" / "logs"
+            if log_dir.exists():
+                sessions = sorted(log_dir.glob("*.jsonl"), key=lambda x: x.stat().st_mtime, reverse=True)
+                sessions_to_analyze = sessions[:3]
+
+        if not sessions_to_analyze:
+            console.print("[yellow]No sessions found to analyze[/yellow]")
+            return
+
+        console.print(f"[cyan]📊 Analyzing {len(sessions_to_analyze)} session(s)...[/cyan]\n")
+
+        for session_path in sessions_to_analyze:
+            console.print(f"[dim]Session: {session_path.name}[/dim]")
+
+            # Extract session entries
+            entries = processor._extract_session_entries(str(session_path))
+
+            if not entries:
+                console.print("[dim]  No conversation data found[/dim]\n")
+                continue
+
+            # Analyze with intelligent detector
+            result = detector.detect(entries)
+
+            # Create analysis panel
+            analysis_content = []
+
+            # Success detection
+            success_icon = "✅" if result.is_success else "⏳"
+            confidence_color = {
+                "certain": "bright_green",
+                "high": "green",
+                "medium": "yellow",
+                "low": "orange",
+                "uncertain": "red"
+            }.get(result.confidence.value, "white")
+
+            analysis_content.append(f"{success_icon} **Success**: {result.is_success} ({result.success_probability:.0%})")
+            analysis_content.append(f"🎯 **Confidence**: [{confidence_color}]{result.confidence.value}[/{confidence_color}]")
+
+            if result.problem:
+                analysis_content.append(f"🔍 **Problem**: {result.problem[:80]}{'...' if len(result.problem) > 80 else ''}")
+
+            if result.solution and result.is_success:
+                analysis_content.append(f"💡 **Solution**: {result.solution[:80]}{'...' if len(result.solution) > 80 else ''}")
+
+            # Pattern quality
+            quality_icons = {"gold": "🏆", "silver": "✨", "bronze": "🥉", "anti": "⚠️"}
+            quality_icon = quality_icons.get(result.pattern_quality, "📝")
+            analysis_content.append(f"{quality_icon} **Quality**: {result.pattern_quality}")
+
+            # Key insights
+            if result.key_insights:
+                analysis_content.append(f"🔍 **Insights**: {len(result.key_insights)} detected")
+                for insight in result.key_insights[:3]:
+                    analysis_content.append(f"   • {insight[:60]}{'...' if len(insight) > 60 else ''}")
+
+            # Evidence summary
+            evidence = result.evidence
+            if evidence:
+                conv_score = evidence.get('conversation_analysis', {}).get('score', 0)
+                exec_score = evidence.get('execution_results', {}).get('score', 0)
+                intent_conf = evidence.get('user_intent', {}).get('confidence', 0)
+                behavior_score = evidence.get('behavioral_patterns', {}).get('score', 0)
+
+                analysis_content.append(f"📈 **Signal Strength**:")
+                analysis_content.append(f"   • Conversation: {conv_score:.0%}")
+                analysis_content.append(f"   • Execution: {exec_score:.0%}")
+                analysis_content.append(f"   • User Intent: {intent_conf:.0%}")
+                analysis_content.append(f"   • Behavior: {behavior_score:.0%}")
+
+            # Recommendation
+            analysis_content.append(f"💭 **Recommendation**: {result.recommendation}")
+
+            panel_content = "\n".join(analysis_content)
+            panel = Panel(panel_content, title=f"🤖 Intelligent Analysis", border_style="bright_blue")
+            console.print(panel)
+            console.print()
+
+    except ImportError:
+        console.print("[red]Intelligent detector not available. Install with enhanced features:[/red]")
+        console.print("[dim]pip install claude-cache[enhanced][/dim]")
+        sys.exit(1)
+    except Exception as e:
+        console.print(f"[red]Analysis error: {e}[/red]")
         sys.exit(1)
 
 
@@ -1164,9 +1291,10 @@ def info():
     console.print("instant access to your accumulated knowledge directly within Claude Code.\n")
 
     console.print("[bold]Features:[/bold]")
+    console.print("• 🤖 Intelligent behavioral detection (NEW v0.9.0!)")
     console.print("• 🔄 Never solve the same problem twice")
+    console.print("• ⚡ Auto-save patterns without interrupting workflow")
     console.print("• 🔍 Semantic search with AI understanding")
-    console.print("• ⚡ Zero context switching in Claude Code")
     console.print("• 🏗️ Cross-project pattern recognition")
     console.print("• 📚 Documentation indexing and search\n")
 
@@ -1175,11 +1303,12 @@ def info():
     console.print('[cyan]{"mcpServers": {"cache": {"type": "stdio", "command": "cache-mcp"}}}[/cyan]\n')
 
     console.print("[bold]CLI Quick Start:[/bold]")
-    console.print("1. [cyan]cache learn[/cyan] \"Fixed CORS issue with middleware\" --tags cors,api")
-    console.print("2. [cyan]cache query[/cyan] \"authentication problems\"")
-    console.print("3. [cyan]cache suggest[/cyan] --context \"working on API endpoints\"")
-    console.print("4. [cyan]cache browse[/cyan] https://docs.example.com")
-    console.print("5. [cyan]cache stats[/cyan] to see your knowledge base\n")
+    console.print("1. [cyan]cache analyze --recent[/cyan] (NEW!) Intelligent session analysis")
+    console.print("2. [cyan]cache learn[/cyan] \"Fixed CORS issue with middleware\" --tags cors,api")
+    console.print("3. [cyan]cache query[/cyan] \"authentication problems\"")
+    console.print("4. [cyan]cache suggest[/cyan] (contextual suggestions)")
+    console.print("5. [cyan]cache browse[/cyan] https://docs.example.com")
+    console.print("6. [cyan]cache stats[/cyan] to see your knowledge base\n")
 
     console.print("[bold]Storage:[/bold]")
     console.print("All data stored locally in ~/.claude/knowledge/ - completely private\n")
