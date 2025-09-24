@@ -15,7 +15,7 @@ console = Console()
 ASCII_ART = """                              claude
  ██████╗ █████╗  ██████╗██╗  ██╗███████╗
 ██╔════╝██╔══██╗██╔════╝██║  ██║██╔════╝
-██║     ███████║██║     ███████║█████╗      v0.9.0
+██║     ███████║██║     ███████║█████╗      v0.9.1
 ██║     ██╔══██║██║     ██╔══██║██╔══╝   🤖 Intelligent
 ╚██████╗██║  ██║╚██████╗██║  ██║███████╗    Detection
  ╚═════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝"""
@@ -1291,7 +1291,7 @@ def info():
     console.print("instant access to your accumulated knowledge directly within Claude Code.\n")
 
     console.print("[bold]Features:[/bold]")
-    console.print("• 🤖 Intelligent behavioral detection (NEW v0.9.0!)")
+    console.print("• 🤖 Intelligent behavioral detection (NEW v0.9.1!)")
     console.print("• 🔄 Never solve the same problem twice")
     console.print("• ⚡ Auto-save patterns without interrupting workflow")
     console.print("• 🔍 Semantic search with AI understanding")
