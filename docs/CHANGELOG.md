@@ -5,6 +5,12 @@ All notable changes to Claude Cache will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2025-01-25
+
+### Fixed
+- **Statistics Display Bug** - Fixed TypeError in agent.py where 'projects' was incorrectly accessing a list instead of count
+- Corrected `stats.get('projects', 0)` to `stats.get('total_projects', 0)` for proper statistics calculation
+
 ## [0.9.0] - 2025-01-24
 
 ### Added
@@ -269,6 +275,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v0.9.1** - Bug fix: Statistics display error correction
 - **v0.9.0** - Revolutionary intelligence: Multi-signal detection with behavioral understanding
 - **v0.6.1** - Production fix: Stable MCP server with FastMCP pattern
 - **v0.6.0** - MCP integration: Native Claude Code tools with 5 slash commands

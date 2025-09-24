@@ -229,7 +229,7 @@ class CacheAgent:
         table.add_column("Details", style="yellow", width=30)
 
         patterns = stats.get('total_patterns', 0)
-        projects = stats.get('projects', 0)
+        projects = stats.get('total_projects', 0)  # Fixed: use total_projects not projects
         requests = stats.get('total_requests', 0)
 
         # Documentation metrics
