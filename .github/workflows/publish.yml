@@ -1,9 +1,14 @@
 name: Publish to PyPI
 
+# Disabled 2026-08-17. Cache is superseded by braintied/watchtower.
+# A GitHub release must not upload a new wheel.
 on:
-  release:
-    types: [published]
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'type PUBLISH to upload — default is off on purpose'
+        required: true
+        default: 'NO'
 
 jobs:
   build-and-publish:
@@ -26,6 +31,7 @@ jobs:
       run: python -m build
 
     - name: Publish to PyPI
+      if: ${{ github.event.inputs.confirm == 'PUBLISH' }}
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
