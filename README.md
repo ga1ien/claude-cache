@@ -1,3 +1,7 @@
+> **Superseded by [braintied/watchtower](https://github.com/braintied/watchtower).**
+>
+> Claude Cache was the first cut of session intelligence for Claude Code. New work lives in Watchtower. This repo stays up for existing installs.
+
 # Claude Cache 🧠
 
 ```
