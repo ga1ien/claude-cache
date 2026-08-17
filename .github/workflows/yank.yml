@@ -7,29 +7,21 @@ jobs:
   yank:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install twine
+        run: python -m pip install --upgrade 'twine>=6,<8'
       - name: Yank every claude-cache version
         env:
+          TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           set -euo pipefail
+          twine yank --help | head -20
           REASON='Superseded by https://github.com/braintied/watchtower'
           VERSIONS='0.1.0 0.2.0 0.2.1 0.6.0 0.6.2 0.6.4 0.6.5 0.6.6 0.6.7 0.6.8 0.7.0 0.8.0 0.8.1 0.8.2 0.9.0 0.9.1 0.9.2'
           for v in $VERSIONS; do
             echo "yanking $v"
-            code=$(curl -sS -o /tmp/yank.out -w '%{http_code}' \
-              -u "__token__:${TWINE_PASSWORD}" \
-              -F ':action=yank_release' \
-              -F 'name=claude-cache' \
-              -F "version=${v}" \
-              -F "yanked_reason=${REASON}" \
-              https://upload.pypi.org/legacy/)
-            echo "  http ${code}"
-            # Do not print the response body; it can echo request context.
-            case "$code" in
-              200|409|410) ;;
-              *)
-                echo "unexpected status for ${v}: ${code}" >&2
-                exit 1
-                ;;
-            esac
+            twine yank claude-cache "$v" --comment "$REASON"
           done
